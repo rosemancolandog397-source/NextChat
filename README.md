@@ -1,483 +1,196 @@
-<div align="center">
+# AI 产品工作台｜基于 NextChat 的需求澄清与 PRD 学习作品
 
-<a href='https://nextchat.club'>
-  <img src="https://github.com/user-attachments/assets/83bdcc07-ae5e-4954-a53a-ac151ba6ccf3" width="1000" alt="icon"/>
-</a>
+> 面向模糊需求梳理场景的 AI 产品经理求职作品：将产品想法、澄清对话、用户确认与 PRD 草稿连接起来。
+>
+> 本项目基于 [NextChat 开源项目](https://github.com/ChatGPTNextWeb/NextChat) 学习和二次开发。聊天、模型接入等基础能力来自上游；本次作品的重点是新增的「AI 产品工作台」。这是借助 AI 编程助手完成的产品实践，不是从零独立开发的聊天平台。
 
-<h1 align="center">NextChat</h1>
+**当前状态：本地网页原型；真实模型澄清已验证，PRD 完整真实调用流程仍待补充验证。**
 
-English / [简体中文](./README_CN.md)
+## 产品界面
 
-<a href="https://trendshift.io/repositories/5973" target="_blank"><img src="https://trendshift.io/api/badge/repositories/5973" alt="ChatGPTNextWeb%2FChatGPT-Next-Web | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+![AI 产品工作台界面：产品想法、需求信息与澄清对话](./docs/images/product-workbench-overview.png)
 
-✨ Light and Fast AI Assistant,with Claude, DeepSeek, GPT4 & Gemini Pro support.
+*截图取自 2026-10-24 的本地工作台，展示演示需求与页面布局。图中模型选择为当时配置，不是固定默认模型；截图不代表真实 PRD 全流程已验证。*
 
-[![Saas][Saas-image]][saas-url]
-[![Web][Web-image]][web-url]
-[![Windows][Windows-image]][download-url]
-[![MacOS][MacOS-image]][download-url]
-[![Linux][Linux-image]][download-url]
+## 项目背景与定位
 
-[NextChatAI](https://nextchat.club?utm_source=readme) / [iOS APP](https://apps.apple.com/us/app/nextchat-ai/id6743085599) / [Web App Demo](https://app.nextchat.club) / [Desktop App](https://github.com/Yidadaa/ChatGPT-Next-Web/releases) / [Enterprise Edition](#enterprise-edition)
+“想做一个 AI 工具”通常还不足以进入开发：目标用户不明确、使用场景缺失、首版范围过大，或将模型推测直接写成需求事实。
 
-[saas-url]: https://nextchat.club?utm_source=readme
-[saas-image]: https://img.shields.io/badge/NextChat-Saas-green?logo=microsoftedge
-[web-url]: https://app.nextchat.club/
-[download-url]: https://github.com/Yidadaa/ChatGPT-Next-Web/releases
-[Web-image]: https://img.shields.io/badge/Web-PWA-orange?logo=microsoftedge
-[Windows-image]: https://img.shields.io/badge/-Windows-blue?logo=windows
-[MacOS-image]: https://img.shields.io/badge/-MacOS-black?logo=apple
-[Linux-image]: https://img.shields.io/badge/-Linux-333?logo=ubuntu
+本作品尝试把通用聊天工具改造成一个有流程约束的需求工作台：先收集信息，再针对缺口提问，由用户确认后整理为可评审的 PRD 草稿。
 
-[<img src="https://zeabur.com/button.svg" alt="Deploy on Zeabur" height="30">](https://zeabur.com/templates/ZBUEFA) [<img src="https://vercel.com/button" alt="Deploy on Vercel" height="30">](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FChatGPTNextWeb%2FChatGPT-Next-Web&env=OPENAI_API_KEY&env=CODE&project-name=nextchat&repository-name=NextChat) [<img src="https://gitpod.io/button/open-in-gitpod.svg" alt="Open in Gitpod" height="30">](https://gitpod.io/#https://github.com/ChatGPTNextWeb/NextChat) [<img src="https://oss.opendeploy.dev/static/deploy-with-your-agent.svg" alt="Deploy with your agent" height="30">](https://opendeploy.dev/github/ChatGPTNextWeb/NextChat)
+- **面向人群**：需要独立梳理早期需求的初级产品经理、产品学习者。
+- **使用场景**：接到模糊产品想法，准备首次需求讨论或评审资料。
+- **设计目标**：让需求依据、AI 建议和待确认事项更容易区分。
+- **产品边界**：辅助整理需求，不能替代用户调研、需求决策或正式评审。上述定位是设计假设，目前没有真实用户研究或量化提效数据支撑。
 
-[<img src="https://github.com/user-attachments/assets/903482d4-3e87-4134-9af1-f2588fa90659" height="50" width="" >](https://monica.im/?utm=nxcrp)
+## 上游能力与本次实际贡献
 
-</div>
+| 范围 | 来源与说明 |
+| --- | --- |
+| 普通聊天、会话管理、模型与接口设置 | 复用 NextChat 原有实现，未作为个人原创能力展示 |
+| 多服务商适配、模型请求及认证基础设施 | 来自上游；工作台调用其现有客户端，不自建模型服务 |
+| Markdown 展示、主题、多语言、面具等基础能力 | 上游已有能力；不代表本次逐项进行了实测 |
+| 工作台导航与四区页面 | 本次新增：产品想法、需求信息、澄清对话、PRD 预览 |
+| 需求澄清与信息确认流程 | 本次新增：已知信息与已问主题控制、建议采纳／不采纳、明确确认及撤销 |
+| PRD 数据结构与审阅交互 | 本次新增：七章结构、来源快照、条目编辑、预览与 Markdown 导出 |
+| 草稿与异常体验 | 本次新增：独立本地草稿、旧草稿恢复、加载／取消／错误／重试状态 |
+| 工作台 OpenAI 兼容接口路径处理 | 本次修复：避免 OpenRouter 地址产生重复 `/v1`；不改全局接口配置和普通聊天适配器 |
+| 工作台相关自动化测试 | 本次新增：数据规则、API 回调、页面交互与路径隔离测试 |
 
-## ❤️ Sponsor AI API
+本次实践以 AI 产品经理视角完成场景选择、流程与信息状态设计，并在 AI 编程助手协助下落实界面、调用逻辑、测试和问题排查。底层模型、训练能力、通用聊天框架和全部上游功能均不属于本次个人开发贡献。
 
-<a href='https://302.ai/'>
-  <img src="https://github.com/user-attachments/assets/a03edf82-2031-4f23-bdb8-bfc0bfd168a4" width="100%" alt="icon"/>
-</a>
+## 已实现功能与验证范围
 
-[302.AI](https://302.ai/) is a pay-as-you-go AI application platform that offers the most comprehensive AI APIs and online applications available.
+| 功能 | 当前行为 | 验证情况 |
+| --- | --- | --- |
+| 产品想法与需求录入 | 支持目标用户、使用场景、核心痛点、成功标准、首版范围、限制与边界六项信息 | 页面检查、自动化测试 |
+| AI 分步澄清 | 根据已有信息提出一个新问题；过滤已明确／已问主题，拦截相同问题文本 | 自动化测试；OpenRouter／DeepSeek 真实澄清调用成功 |
+| 区分陈述与推测 | 用户输入或明确采纳的信息进入确认来源；AI 推测保持待确认，可不采纳或撤销确认 | 自动化测试；真实页面展示已验证 |
+| 结构化 PRD | 校验七章结构、条目状态与来源；不符合结构的响应不会覆盖原文档 | 已实现，模拟模型响应的自动化测试通过；真实模型完整生成流程待验证 |
+| 编辑、预览与导出 | PRD 条目可编辑；修改后重新确认；支持预览与 Markdown 导出 | 自动化交互测试通过；真实模型生成后的完整人工操作流程待验证 |
+| 本地草稿与旧数据恢复 | 使用独立存储键保存工作台草稿，恢复早期版本内容；损坏数据不自动覆盖 | 自动化测试；旧草稿恢复有浏览器检查记录 |
+| 请求失败处理 | 加载提示、取消、150 秒工作台超时兜底、错误提示与手动重试；失败保留旧草稿 | 自动化测试；HTTP 404 排查及修复后真实重试成功 |
 
-## 🥳 Cheer for NextChat iOS Version Online!
+“用户确认”表示用户明确表达或采纳的需求，不等于已通过调研验证的客观事实。去重目前依靠主题和标准化文本规则，尚未实现语义级去重。
 
-> [👉 Click Here to Install Now](https://apps.apple.com/us/app/nextchat-ai/id6743085599)
+### PRD 的七个章节
 
-> [❤️ Source Code Coming Soon](https://github.com/ChatGPTNextWeb/NextChat-iOS)
+1. 背景与目标。
+2. 目标用户与使用场景。
+3. 痛点与需求依据。
+4. 功能需求与范围。
+5. 核心流程与异常分支。
+6. 验收标准。
+7. 风险、假设与待确认项。
 
-![Github iOS Image](https://github.com/user-attachments/assets/e0aa334f-4c13-4dc9-8310-e3b09fa4b9f3)
+PRD 使用已确认、AI 建议、待确认等状态区分条目。模型自称“已确认”并不足以成为事实：目前仅在引用文本与确认来源完全一致时保留自动确认状态，否则降为建议，再由用户审阅。这是保守的来源约束，不是完整的事实核查系统。
 
-## 🫣 NextChat Support MCP !
+## 产品设计中的关键取舍
 
-> Before build, please set env ENABLE_MCP=true
+- **先澄清，再写文档**：把需求信息区与对话区并列展示，便于用户检查遗漏，而不是只输出一段长文本。
+- **由用户掌握确认权**：AI 推测不会自动变成已确认需求；用户可以采纳、不采纳和撤销。
+- **保留修改后的控制权**：编辑条目后需要重新确认；需求改变时提示 PRD 可能过期，不自动重写。
+- **优先复用成熟能力**：沿用 NextChat 的模型与认证配置，将本次实现集中在产品流程、数据状态和异常体验。
 
-<img src="./docs/images/mcp-market.png" alt="NextChat MCP Market" />
+这些设计展示的是需求分析与原型落地能力，尚不代表商业效果或真实使用效率已经得到验证。
 
-## Enterprise Edition
+## 技术架构
 
-Meeting Your Company's Privatization and Customization Deployment Requirements:
+| 层次 | 实现方式 |
+| --- | --- |
+| 应用基础 | Next.js 14、React 18、TypeScript，沿用上游工程 |
+| 导航与界面 | React Router、工作台独立组件、SCSS Modules |
+| 模型配置 | 读取 NextChat 的全局配置和当前会话模型配置，复用 Zustand 状态 |
+| AI 调用 | 工作台专用客户端工厂 → 上游模型适配器 → 已配置的模型服务；使用非流式文本请求，不继承当前聊天的插件工具执行 |
+| 内容处理 | 澄清与 PRD 提示词、JSON 解析、章节／来源／状态校验 |
+| 工作台存储 | 浏览器 localStorage，独立键 `nextchat-product-workbench-v1`；不新增业务数据库 |
+| 预览与测试 | react-markdown、remark-gfm；Jest、Testing Library |
 
-- **Brand Customization**: Tailored VI/UI to seamlessly align with your corporate brand image.
-- **Resource Integration**: Unified configuration and management of dozens of AI resources by company administrators, ready for use by team members.
-- **Permission Control**: Clearly defined member permissions, resource permissions, and knowledge base permissions, all controlled via a corporate-grade Admin Panel.
-- **Knowledge Integration**: Combining your internal knowledge base with AI capabilities, making it more relevant to your company's specific business needs compared to general AI.
-- **Security Auditing**: Automatically intercept sensitive inquiries and trace all historical conversation records, ensuring AI adherence to corporate information security standards.
-- **Private Deployment**: Enterprise-level private deployment supporting various mainstream private cloud solutions, ensuring data security and privacy protection.
-- **Continuous Updates**: Ongoing updates and upgrades in cutting-edge capabilities like multimodal AI, ensuring consistent innovation and advancement.
+调用流程：
 
-For enterprise inquiries, please contact: **business@nextchat.club**
-
-## Screenshots
-
-![Settings](./docs/images/settings.png)
-
-![More](./docs/images/more.png)
-
-## Features
-
-- **Deploy for free with one-click** on Vercel in under 1 minute
-- Compact client (~5MB) on Linux/Windows/MacOS, [download it now](https://github.com/Yidadaa/ChatGPT-Next-Web/releases)
-- Fully compatible with self-deployed LLMs, recommended for use with [RWKV-Runner](https://github.com/josStorer/RWKV-Runner) or [LocalAI](https://github.com/go-skynet/LocalAI)
-- Privacy first, all data is stored locally in the browser
-- Markdown support: LaTex, mermaid, code highlight, etc.
-- Responsive design, dark mode and PWA
-- Fast first screen loading speed (~100kb), support streaming response
-- New in v2: create, share and debug your chat tools with prompt templates (mask)
-- Awesome prompts powered by [awesome-chatgpt-prompts-zh](https://github.com/PlexPt/awesome-chatgpt-prompts-zh) and [awesome-chatgpt-prompts](https://github.com/f/awesome-chatgpt-prompts)
-- Automatically compresses chat history to support long conversations while also saving your tokens
-- I18n: English, 简体中文, 繁体中文, 日本語, Français, Español, Italiano, Türkçe, Deutsch, Tiếng Việt, Русский, Čeština, 한국어, Indonesia
-
-<div align="center">
-
-![主界面](./docs/images/cover.png)
-
-</div>
-
-## Roadmap
-
-- [x] System Prompt: pin a user defined prompt as system prompt [#138](https://github.com/Yidadaa/ChatGPT-Next-Web/issues/138)
-- [x] User Prompt: user can edit and save custom prompts to prompt list
-- [x] Prompt Template: create a new chat with pre-defined in-context prompts [#993](https://github.com/Yidadaa/ChatGPT-Next-Web/issues/993)
-- [x] Share as image, share to ShareGPT [#1741](https://github.com/Yidadaa/ChatGPT-Next-Web/pull/1741)
-- [x] Desktop App with tauri
-- [x] Self-host Model: Fully compatible with [RWKV-Runner](https://github.com/josStorer/RWKV-Runner), as well as server deployment of [LocalAI](https://github.com/go-skynet/LocalAI): llama/gpt4all/rwkv/vicuna/koala/gpt4all-j/cerebras/falcon/dolly etc.
-- [x] Artifacts: Easily preview, copy and share generated content/webpages through a separate window [#5092](https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web/pull/5092)
-- [x] Plugins: support network search, calculator, any other apis etc. [#165](https://github.com/Yidadaa/ChatGPT-Next-Web/issues/165) [#5353](https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web/issues/5353)
-  - [x] network search, calculator, any other apis etc. [#165](https://github.com/Yidadaa/ChatGPT-Next-Web/issues/165) [#5353](https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web/issues/5353)
-- [x] Supports Realtime Chat [#5672](https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web/issues/5672)
-- [ ] local knowledge base
-
-## What's New
-
-- 🚀 v2.15.8 Now supports Realtime Chat [#5672](https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web/issues/5672)
-- 🚀 v2.15.4 The Application supports using Tauri fetch LLM API, MORE SECURITY! [#5379](https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web/issues/5379)
-- 🚀 v2.15.0 Now supports Plugins! Read this: [NextChat-Awesome-Plugins](https://github.com/ChatGPTNextWeb/NextChat-Awesome-Plugins)
-- 🚀 v2.14.0 Now supports Artifacts & SD
-- 🚀 v2.10.1 support Google Gemini Pro model.
-- 🚀 v2.9.11 you can use azure endpoint now.
-- 🚀 v2.8 now we have a client that runs across all platforms!
-- 🚀 v2.7 let's share conversations as image, or share to ShareGPT!
-- 🚀 v2.0 is released, now you can create prompt templates, turn your ideas into reality! Read this: [ChatGPT Prompt Engineering Tips: Zero, One and Few Shot Prompting](https://www.allabtai.com/prompt-engineering-tips-zero-one-and-few-shot-prompting/).
-
-## Get Started
-
-1. Get [OpenAI API Key](https://platform.openai.com/account/api-keys);
-2. Click
-   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FYidadaa%2FChatGPT-Next-Web&env=OPENAI_API_KEY&env=CODE&project-name=chatgpt-next-web&repository-name=ChatGPT-Next-Web), remember that `CODE` is your page password;
-3. Enjoy :)
-
-## FAQ
-
-[English > FAQ](./docs/faq-en.md)
-
-## Keep Updated
-
-If you have deployed your own project with just one click following the steps above, you may encounter the issue of "Updates Available" constantly showing up. This is because Vercel will create a new project for you by default instead of forking this project, resulting in the inability to detect updates correctly.
-
-We recommend that you follow the steps below to re-deploy:
-
-- Delete the original repository;
-- Use the fork button in the upper right corner of the page to fork this project;
-- Choose and deploy in Vercel again, [please see the detailed tutorial](./docs/vercel-cn.md).
-
-### Enable Automatic Updates
-
-> If you encounter a failure of Upstream Sync execution, please [manually update code](./README.md#manually-updating-code).
-
-After forking the project, due to the limitations imposed by GitHub, you need to manually enable Workflows and Upstream Sync Action on the Actions page of the forked project. Once enabled, automatic updates will be scheduled every hour:
-
-![Automatic Updates](./docs/images/enable-actions.jpg)
-
-![Enable Automatic Updates](./docs/images/enable-actions-sync.jpg)
-
-### Manually Updating Code
-
-If you want to update instantly, you can check out the [GitHub documentation](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork) to learn how to synchronize a forked project with upstream code.
-
-You can star or watch this project or follow author to get release notifications in time.
-
-## Access Password
-
-This project provides limited access control. Please add an environment variable named `CODE` on the vercel environment variables page. The value should be passwords separated by comma like this:
-
-```
-code1,code2,code3
+```mermaid
+flowchart TD
+    A[产品想法与已有需求] --> B[工作台构建提示词]
+    B --> C[复用 NextChat 模型配置和适配器]
+    C --> D[已配置的外部模型服务]
+    D --> E[解析并校验结构与信息来源]
+    E --> F[澄清问题与待确认建议]
+    E --> G[PRD 草稿]
+    F --> H[用户回答或明确确认]
+    H --> A
+    G --> I[条目编辑与预览]
+    I --> J[Markdown 导出]
 ```
 
-After adding or modifying this environment variable, please redeploy the project for the changes to take effect.
-
-## Environment Variables
-
-### `CODE` (optional)
-
-Access password, separated by comma.
-
-### `OPENAI_API_KEY` (required)
-
-Your openai api key, join multiple api keys with comma.
-
-### `BASE_URL` (optional)
-
-> Default: `https://api.openai.com`
-
-> Examples: `http://your-openai-proxy.com`
-
-Override openai api request base url.
-
-### `OPENAI_ORG_ID` (optional)
-
-Specify OpenAI organization ID.
-
-### `AZURE_URL` (optional)
-
-> Example: https://{azure-resource-url}/openai
-
-Azure deploy url.
-
-### `AZURE_API_KEY` (optional)
-
-Azure Api Key.
-
-### `AZURE_API_VERSION` (optional)
-
-Azure Api Version, find it at [Azure Documentation](https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#chat-completions).
-
-### `GOOGLE_API_KEY` (optional)
-
-Google Gemini Pro Api Key.
-
-### `GOOGLE_URL` (optional)
-
-Google Gemini Pro Api Url.
-
-### `ANTHROPIC_API_KEY` (optional)
-
-anthropic claude Api Key.
-
-### `ANTHROPIC_API_VERSION` (optional)
-
-anthropic claude Api version.
-
-### `ANTHROPIC_URL` (optional)
-
-anthropic claude Api Url.
-
-### `BAIDU_API_KEY` (optional)
-
-Baidu Api Key.
-
-### `BAIDU_SECRET_KEY` (optional)
-
-Baidu Secret Key.
-
-### `BAIDU_URL` (optional)
-
-Baidu Api Url.
-
-### `BYTEDANCE_API_KEY` (optional)
-
-ByteDance Api Key.
-
-### `BYTEDANCE_URL` (optional)
-
-ByteDance Api Url.
-
-### `ALIBABA_API_KEY` (optional)
-
-Alibaba Cloud Api Key.
-
-### `ALIBABA_URL` (optional)
-
-Alibaba Cloud Api Url.
-
-### `IFLYTEK_URL` (Optional)
-
-iflytek Api Url.
-
-### `IFLYTEK_API_KEY` (Optional)
-
-iflytek Api Key.
-
-### `IFLYTEK_API_SECRET` (Optional)
-
-iflytek Api Secret.
-
-### `CHATGLM_API_KEY` (optional)
-
-ChatGLM Api Key.
-
-### `CHATGLM_URL` (optional)
-
-ChatGLM Api Url.
-
-### `DEEPSEEK_API_KEY` (optional)
-
-DeepSeek Api Key.
-
-### `DEEPSEEK_URL` (optional)
-
-DeepSeek Api Url.
-
-### `HIDE_USER_API_KEY` (optional)
-
-> Default: Empty
-
-If you do not want users to input their own API key, set this value to 1.
-
-### `DISABLE_GPT4` (optional)
-
-> Default: Empty
-
-If you do not want users to use GPT-4, set this value to 1.
-
-### `ENABLE_BALANCE_QUERY` (optional)
-
-> Default: Empty
-
-If you do want users to query balance, set this value to 1.
-
-### `DISABLE_FAST_LINK` (optional)
-
-> Default: Empty
-
-If you want to disable parse settings from url, set this to 1.
-
-### `CUSTOM_MODELS` (optional)
-
-> Default: Empty
-> Example: `+llama,+claude-2,-gpt-3.5-turbo,gpt-4-1106-preview=gpt-4-turbo` means add `llama, claude-2` to model list, and remove `gpt-3.5-turbo` from list, and display `gpt-4-1106-preview` as `gpt-4-turbo`.
-
-To control custom models, use `+` to add a custom model, use `-` to hide a model, use `name=displayName` to customize model name, separated by comma.
-
-User `-all` to disable all default models, `+all` to enable all default models.
-
-For Azure: use `modelName@Azure=deploymentName` to customize model name and deployment name.
-
-> Example: `+gpt-3.5-turbo@Azure=gpt35` will show option `gpt35(Azure)` in model list.
-> If you only can use Azure model, `-all,+gpt-3.5-turbo@Azure=gpt35` will `gpt35(Azure)` the only option in model list.
-
-For ByteDance: use `modelName@bytedance=deploymentName` to customize model name and deployment name.
-
-> Example: `+Doubao-lite-4k@bytedance=ep-xxxxx-xxx` will show option `Doubao-lite-4k(ByteDance)` in model list.
-
-### `DEFAULT_MODEL` （optional）
-
-Change default model
-
-### `VISION_MODELS` (optional)
-
-> Default: Empty
-> Example: `gpt-4-vision,claude-3-opus,my-custom-model` means add vision capabilities to these models in addition to the default pattern matches (which detect models containing keywords like "vision", "claude-3", "gemini-1.5", etc).
-
-Add additional models to have vision capabilities, beyond the default pattern matching. Multiple models should be separated by commas.
-
-### `WHITE_WEBDAV_ENDPOINTS` (optional)
-
-You can use this option if you want to increase the number of webdav service addresses you are allowed to access, as required by the format：
-
-- Each address must be a complete endpoint
-  > `https://xxxx/yyy`
-- Multiple addresses are connected by ', '
-
-### `DEFAULT_INPUT_TEMPLATE` (optional)
-
-Customize the default template used to initialize the User Input Preprocessing configuration item in Settings.
-
-### `STABILITY_API_KEY` (optional)
-
-Stability API key.
-
-### `STABILITY_URL` (optional)
-
-Customize Stability API url.
-
-### `ENABLE_MCP` (optional)
-
-Enable MCP（Model Context Protocol）Feature. For security, MCP also requires
-`CODE` to be configured; all MCP server actions verify that access code.
-
-### `SILICONFLOW_API_KEY` (optional)
-
-SiliconFlow API Key.
-
-### `SILICONFLOW_URL` (optional)
-
-SiliconFlow API URL.
-
-### `AI302_API_KEY` (optional)
-
-302.AI API Key.
-
-### `AI302_URL` (optional)
-
-302.AI API URL.
-
-## Requirements
-
-NodeJS >= 18, Docker >= 20
-
-## Development
-
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/Yidadaa/ChatGPT-Next-Web)
-
-Before starting development, you must create a new `.env.local` file at project root, and place your api key into it:
-
-```
-OPENAI_API_KEY=<your api key here>
-
-# if you are not able to access openai service, use this BASE_URL
-BASE_URL=https://chatgpt1.nextweb.fun/api/proxy
+工作台草稿保存在当前浏览器，但执行 AI 请求时，需求内容会发送至所选模型服务。本地保存不等于内容不出设备；没有为工作台新增账号系统、团队权限或云端草稿同步。
+
+### 主要改造文件
+
+```text
+app/components/product-workbench.tsx          工作台页面与交互
+app/components/product-workbench.module.scss  工作台样式
+app/utils/product-workbench.ts               草稿、来源、PRD 与导出规则
+app/utils/product-workbench-ai.ts            提示词、响应解析及请求状态处理
+app/client/product-workbench.ts              工作台模型适配与路径兼容
+app/components/home.tsx                      接入工作台路由
+app/components/sidebar.tsx                   新增工作台入口
+app/constant.ts                              新增路由常量
+test/product-workbench*.test.ts*             工作台相关测试
 ```
 
-### Local Development
+## 本地运行
 
-```shell
-# 1. install nodejs and yarn first
-# 2. config local env vars in `.env.local`
-# 3. run
-yarn install
-yarn dev
+### 环境与安装
+
+`package.json` 指定 Yarn **1.22.19**。上游 README 声明 Node.js ≥ 18；本项目本地开发与测试使用过 Node.js **24.21.0**、npm **11.19.0**，不代表所有 Node.js 版本均已验证。网页开发不要求安装 Docker。
+
+在已具备 Git、Node.js 和 Corepack 的环境中：
+
+```bash
+# 当前仓库为私人仓库，需要先具备访问权限
+git clone https://github.com/rosemancolandog397-source/NextChat.git
+cd NextChat
+
+# 指定项目所用版本，不需要全局安装 Yarn 或执行 corepack enable
+corepack yarn@1.22.19 install --frozen-lockfile
+corepack yarn@1.22.19 dev
 ```
 
-## Deployment
+默认浏览器地址：`http://localhost:3000/`。
 
-### Docker (Recommended)
+工作台地址：`http://localhost:3000/#/product-workbench`，也可点击侧栏「AI 产品工作台」。以启动日志中的实际端口为准。macOS 如果出现文件监听数量不足，可按需使用 `WATCHPACK_POLLING=1000` 启动开发服务。
 
-```shell
-docker pull yidadaa/chatgpt-next-web
+### 模型配置
 
-docker run -d -p 3000:3000 \
-   -e OPENAI_API_KEY=sk-xxxx \
-   -e CODE=your-password \
-   yidadaa/chatgpt-next-web
+1. 优先通过 NextChat 设置页面配置服务商、接口地址与自己的 API Key，再在普通聊天页选择模型。
+2. 返回工作台，检查顶部显示的模型是否符合预期。页面结构与本地模板可先查看，AI 澄清和 AI PRD 请求需要有效的模型权限、额度及网络。
+3. OpenRouter 使用 OpenAI 兼容接口配置，模型名称填写服务商提供的完整模型 ID；工作台不硬编码模型名称或密钥。
+
+本版本上游 OpenAI 适配器会追加 `v1/chat/completions`。若希望普通聊天与工作台共用 OpenRouter，可填写基础地址 `https://openrouter.ai/api`。工作台还单独兼容 `https://openrouter.ai/api/v1`，避免重复版本路径；这项修复未扩展到普通聊天代码。
+
+服务端环境变量部署方式及其他服务商说明，请参阅保留的[上游原始 README](./README_UPSTREAM.md)与[上游中文说明](./README_CN.md)。不要将真实密钥、Token、密码或包含认证信息的浏览器存储导出到仓库。
+
+## 验证记录与演示方式
+
+最近一次代码检查记录（2026-10-25，提交 `cdfe530`）：
+
+- 全项目 **40 个测试套件、212 项测试通过**，包含上游和其他已有测试，不能全部算作工作台新增测试。
+- TypeScript 检查及当次选定文件的 ESLint 检查通过。
+- OpenRouter／DeepSeek 真实澄清请求成功，页面展示新问题及独立待确认建议。
+- PRD 结构解析、编辑、预览、导出、取消与错误处理由模拟接口测试覆盖；此前一次真实 PRD 返回不完整结构，页面保留旧草稿。**尚未完成真实模型 PRD 全流程验收**。
+- 未完成生产构建、线上部署、全服务商兼容或桌面端验收。
+
+可复现的本地检查：
+
+```bash
+corepack yarn@1.22.19 test:ci --runInBand
+corepack yarn@1.22.19 tsc --noEmit --incremental false
 ```
 
-You can start service behind a proxy:
+建议评审按以下顺序查看作品：
 
-```shell
-docker run -d -p 3000:3000 \
-   -e OPENAI_API_KEY=sk-xxxx \
-   -e CODE=your-password \
-   -e PROXY_URL=http://localhost:7890 \
-   yidadaa/chatgpt-next-web
-```
+1. 输入一个演示产品想法，补充部分需求，观察工作台如何提问。
+2. 区分用户陈述与 AI 推测，尝试采纳、不采纳或撤销确认。
+3. 请求生成 PRD，检查七章结构、来源和状态；该步骤仍应作为真实模型验收项目，失败时检查草稿是否保留。
+4. 在成功生成 PRD 后，编辑一个条目、重新确认、预览并导出 Markdown，再修改需求，检查过期提示。
 
-If your proxy needs password, use:
+## 后续优化方向（规划中）
 
-```shell
--e PROXY_URL="http://127.0.0.1:7890 user pass"
-```
+- 补齐真实模型从澄清到 PRD 生成、编辑、导出的完整验收样例。
+- 建立固定需求样例集，评估问题相关性、重复率、来源引用和文档完整度。
+- 优化结构化输出的稳定性，改善格式失败时的恢复体验。
+- 从主题／文本规则推进到语义级重复问题检测。
+- 探索多项目草稿、版本对比和更细粒度的来源追踪。
+- 开展小范围用户访谈与可用性测试，验证定位及设计假设。
 
-If enable MCP, use：
+上述内容未作为已完成功能展示；当前没有团队协作、多项目管理或自动事实核查能力。
 
-```
-docker run -d -p 3000:3000 \
-   -e OPENAI_API_KEY=sk-xxxx \
-   -e CODE=your-password \
-   -e ENABLE_MCP=true \
-   yidadaa/chatgpt-next-web
-```
+## 开源来源、作者与许可证
 
-### Shell
+- 上游项目：[ChatGPTNextWeb / NextChat](https://github.com/ChatGPTNextWeb/NextChat)。原 README 中保留了 `ChatGPT-Next-Web` 等历史名称和链接。
+- 原作者及贡献者：[NextChat 上游贡献者](https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web/graphs/contributors)。感谢原作者 Yidadaa、NextChat 团队及社区贡献者。
+- 二次开发作品维护账号：[rosemancolandog397-source](https://github.com/rosemancolandog397-source)。
+- 开源协议：[MIT License](./LICENSE)，原版权声明 **Copyright (c) 2023-2025 NextChat** 保持不变。
+- 完整上游说明：[README_UPSTREAM.md](./README_UPSTREAM.md)；原有中文说明：[README_CN.md](./README_CN.md)。上游文档介绍的企业版、桌面应用、部署方式及宣传数据，不代表本作品自行实现或逐项验证。
 
-```shell
-bash <(curl -s https://raw.githubusercontent.com/Yidadaa/ChatGPT-Next-Web/main/scripts/setup.sh)
-```
-
-## Synchronizing Chat Records (UpStash)
-
-| [简体中文](./docs/synchronise-chat-logs-cn.md) | [English](./docs/synchronise-chat-logs-en.md) | [Italiano](./docs/synchronise-chat-logs-es.md) | [日本語](./docs/synchronise-chat-logs-ja.md) | [한국어](./docs/synchronise-chat-logs-ko.md)
-
-## Documentation
-
-> Please go to the [docs][./docs] directory for more documentation instructions.
-
-- [Deploy with cloudflare (Deprecated)](./docs/cloudflare-pages-en.md)
-- [Frequent Ask Questions](./docs/faq-en.md)
-- [How to add a new translation](./docs/translation.md)
-- [How to use Vercel (No English)](./docs/vercel-cn.md)
-- [User Manual (Only Chinese, WIP)](./docs/user-manual-cn.md)
-
-## Translation
-
-If you want to add a new translation, read this [document](./docs/translation.md).
-
-## Donation
-
-[Buy Me a Coffee](https://www.buymeacoffee.com/yidadaa)
-
-## Special Thanks
-
-### Contributors
-
-<a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=ChatGPTNextWeb/ChatGPT-Next-Web" />
-</a>
-
-## LICENSE
-
-[MIT](https://opensource.org/license/mit/)
+本项目最初通过官方 ZIP 获取源码，之后建立本地 Git 仓库，因此当前仓库不包含完整上游 Git 提交历史。保留协议、版权及来源说明，不将二次开发作品包装为全部独立原创。
