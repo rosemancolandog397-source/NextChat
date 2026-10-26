@@ -77,7 +77,9 @@ export function AuthPage() {
         }}
       />
 
-      {!accessStore.hideUserApiKey ? (
+      {!getClientConfig()?.serverOnlyApiKey &&
+      !accessStore.serverOnlyApiKey &&
+      !accessStore.hideUserApiKey ? (
         <>
           <div className={styles["auth-tips"]}>{Locale.Auth.SubTips}</div>
           <PasswordInput

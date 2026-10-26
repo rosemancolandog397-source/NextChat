@@ -34,6 +34,8 @@ import { createPersistStore } from "../utils/store";
 import { estimateTokenLength } from "../utils/token";
 import { ModelConfig, ModelType, useAppConfig } from "./config";
 import { useAccessStore } from "./access";
+import { getClientConfig } from "../config/client";
+import { normalizeModelSelection } from "../utils/model-initialization";
 import { collectModelsWithDefaultModel } from "../utils/model";
 import { createEmptyMask, Mask } from "./mask";
 import { executeMcpAction, getAllTools, isMcpEnabled } from "../mcp/actions";
@@ -102,6 +104,8 @@ export const BOT_HELLO: ChatMessage = createMessage({
 });
 
 function createEmptySession(): ChatSession {
+  const mask = createEmptyMask();
+  mask.modelConfig = normalizeModelSelection(mask.modelConfig);
   return {
     id: nanoid(),
     topic: DEFAULT_TOPIC,
@@ -115,7 +119,7 @@ function createEmptySession(): ChatSession {
     lastUpdate: Date.now(),
     lastSummarizeIndex: 0,
 
-    mask: createEmptyMask(),
+    mask,
   };
 }
 
@@ -313,10 +317,10 @@ export const useChatStore = createPersistStore(
 
           session.mask = {
             ...mask,
-            modelConfig: {
+            modelConfig: normalizeModelSelection({
               ...globalModelConfig,
               ...mask.modelConfig,
-            },
+            }),
           };
           session.topic = mask.name;
         }
@@ -867,6 +871,21 @@ export const useChatStore = createPersistStore(
   {
     name: StoreKey.Chat,
     version: 3.3,
+    merge(persistedState, currentState) {
+      const state = { ...currentState, ...(persistedState as Partial<typeof currentState>) };
+      const policy = getClientConfig();
+      if (!policy?.serverOnlyApiKey) return state;
+      return {
+        ...state,
+        sessions: state.sessions.map((session) => ({
+          ...session,
+          mask: {
+            ...session.mask,
+            modelConfig: normalizeModelSelection(session.mask.modelConfig, policy),
+          },
+        })),
+      };
+    },
     migrate(persistedState, version) {
       const state = persistedState as any;
       const newState = JSON.parse(

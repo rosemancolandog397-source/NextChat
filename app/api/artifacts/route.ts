@@ -1,8 +1,11 @@
 import md5 from "spark-md5";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSideConfig } from "@/app/config/server";
+import { publicDataAccessBlocked } from "../public-privacy";
 
-async function handle(req: NextRequest, res: NextResponse) {
+async function handle(req: NextRequest) {
+  const blocked = publicDataAccessBlocked();
+  if (blocked) return blocked;
   const serverConfig = getServerSideConfig();
   const storeUrl = () =>
     `https://api.cloudflare.com/client/v4/accounts/${serverConfig.cloudflareAccountId}/storage/kv/namespaces/${serverConfig.cloudflareKVNamespaceId}`;
@@ -26,7 +29,7 @@ async function handle(req: NextRequest, res: NextResponse) {
         body["expiration_ttl"] = ttl;
       }
     } catch (e) {
-      console.error(e);
+
     }
     const res = await fetch(`${storeUrl()}/bulk`, {
       headers: {
@@ -37,7 +40,7 @@ async function handle(req: NextRequest, res: NextResponse) {
       body: JSON.stringify([body]),
     });
     const result = await res.json();
-    console.log("save data", result);
+
     if (result?.success) {
       return NextResponse.json(
         { code: 0, id: hashedCode, result },

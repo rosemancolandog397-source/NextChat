@@ -1,6 +1,8 @@
 import md5 from "spark-md5";
 import { DEFAULT_MODELS, DEFAULT_GA_ID } from "../constant";
 import { isGPT4Model } from "../utils/model";
+import { serverOnlyApiKeys } from "./key-policy";
+import { allowedAiModel } from "./ai-cost-policy";
 
 declare global {
   namespace NodeJS {
@@ -118,13 +120,6 @@ function getApiKey(keys?: string) {
   const apiKeys = apiKeyEnvVar.split(",").map((v) => v.trim());
   const randomIndex = Math.floor(Math.random() * apiKeys.length);
   const apiKey = apiKeys[randomIndex];
-  if (apiKey) {
-    console.log(
-      `[Server Config] using ${randomIndex + 1} of ${
-        apiKeys.length
-      } api key - ${apiKey}`,
-    );
-  }
 
   return apiKey;
 }
@@ -140,6 +135,11 @@ export const getServerSideConfig = () => {
   let customModels = process.env.CUSTOM_MODELS ?? "";
   let defaultModel = process.env.DEFAULT_MODEL ?? "";
   let visionModels = process.env.VISION_MODELS ?? "";
+  if (serverOnlyApiKeys(process.env)) {
+    const model = allowedAiModel(process.env);
+    customModels = model ? `-all,+${model}@OpenAI` : "-all";
+    defaultModel = model ? `${model}@OpenAI` : "";
+  }
 
   if (disableGPT4) {
     if (customModels) customModels += ",";
@@ -168,14 +168,6 @@ export const getServerSideConfig = () => {
   const isChatGLM = !!process.env.CHATGLM_API_KEY;
   const isSiliconFlow = !!process.env.SILICONFLOW_API_KEY;
   const isAI302 = !!process.env.AI302_API_KEY;
-  // const apiKeyEnvVar = process.env.OPENAI_API_KEY ?? "";
-  // const apiKeys = apiKeyEnvVar.split(",").map((v) => v.trim());
-  // const randomIndex = Math.floor(Math.random() * apiKeys.length);
-  // const apiKey = apiKeys[randomIndex];
-  // console.log(
-  //   `[Server Config] using ${randomIndex + 1} of ${apiKeys.length} api key`,
-  // );
-
   const allowedWebDavEndpoints = (
     process.env.WHITE_WEBDAV_ENDPOINTS ?? ""
   ).split(",");
@@ -265,14 +257,18 @@ export const getServerSideConfig = () => {
     proxyUrl: process.env.PROXY_URL,
     isVercel: !!process.env.VERCEL,
 
-    hideUserApiKey: !!process.env.HIDE_USER_API_KEY,
+    serverOnlyApiKey: serverOnlyApiKeys(process.env),
+    hideUserApiKey:
+      serverOnlyApiKeys(process.env) || !!process.env.HIDE_USER_API_KEY,
     disableGPT4,
     hideBalanceQuery: !process.env.ENABLE_BALANCE_QUERY,
-    disableFastLink: !!process.env.DISABLE_FAST_LINK,
+    disableFastLink:
+      serverOnlyApiKeys(process.env) || !!process.env.DISABLE_FAST_LINK,
     customModels,
     defaultModel,
     visionModels,
     allowedWebDavEndpoints,
-    enableMcp: process.env.ENABLE_MCP === "true",
+    enableMcp:
+      !serverOnlyApiKeys(process.env) && process.env.ENABLE_MCP === "true",
   };
 };

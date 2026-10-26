@@ -8,6 +8,7 @@ import { useMaskStore } from "../store/mask";
 import { usePromptStore } from "../store/prompt";
 import { StoreKey } from "../constant";
 import { merge } from "./merge";
+import { assertPrivateDataFeatures } from "./public-privacy";
 
 type NonFunctionKeys<T> = {
   [K in keyof T]: T[K] extends (...args: any[]) => any ? never : K;
@@ -119,6 +120,7 @@ const MergeStates: StateMerger = {
 };
 
 export function getLocalAppState() {
+  assertPrivateDataFeatures();
   const appState = Object.fromEntries(
     Object.entries(LocalStateGetters).map(([key, getter]) => {
       return [key, getter()];
@@ -129,6 +131,7 @@ export function getLocalAppState() {
 }
 
 export function setLocalAppState(appState: AppState) {
+  assertPrivateDataFeatures();
   Object.entries(LocalStateSetters).forEach(([key, setter]) => {
     setter(appState[key as keyof AppState]);
   });

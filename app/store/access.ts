@@ -25,6 +25,7 @@ import { createPersistStore } from "../utils/store";
 import { ensure } from "../utils/clone";
 import { DEFAULT_CONFIG } from "./config";
 import { getModelProvider } from "../utils/model";
+import { publicModelAccessConfig } from "../utils/model-initialization";
 
 let fetchState = 0; // 0 not fetch, 1 fetching, 2 done
 
@@ -141,7 +142,8 @@ const DEFAULT_ACCESS_STATE = {
 
   // server config
   needCode: true,
-  hideUserApiKey: false,
+  serverOnlyApiKey: !!getClientConfig()?.serverOnlyApiKey,
+  hideUserApiKey: !!getClientConfig()?.serverOnlyApiKey,
   hideBalanceQuery: false,
   disableGPT4: false,
   disableFastLink: false,
@@ -151,6 +153,7 @@ const DEFAULT_ACCESS_STATE = {
 
   // tts config
   edgeTTSVoiceName: "zh-CN-YunxiNeural",
+  ...publicModelAccessConfig(),
 };
 
 export const useAccessStore = createPersistStore(
@@ -229,6 +232,10 @@ export const useAccessStore = createPersistStore(
     isAuthorized() {
       this.fetch();
 
+      if (getClientConfig()?.serverOnlyApiKey || get().serverOnlyApiKey) {
+        return !get().needCode || ensure(get(), ["accessCode"]);
+      }
+
       // has token or has code or disabled access control
       return (
         this.isValidOpenAI() ||
@@ -262,7 +269,7 @@ export const useAccessStore = createPersistStore(
         .then((res) => res.json())
         .then((res) => {
           const defaultModel = res.defaultModel ?? "";
-          if (defaultModel !== "") {
+          if (defaultModel !== "" && !getClientConfig()?.serverOnlyApiKey) {
             const [model, providerName] = getModelProvider(defaultModel);
             DEFAULT_CONFIG.modelConfig.model = model;
             DEFAULT_CONFIG.modelConfig.providerName = providerName as any;
@@ -285,6 +292,13 @@ export const useAccessStore = createPersistStore(
   {
     name: StoreKey.Access,
     version: 2,
+    merge(persistedState, currentState) {
+      return {
+        ...currentState,
+        ...(persistedState as Partial<typeof currentState>),
+        ...publicModelAccessConfig(),
+      };
+    },
     migrate(persistedState, version) {
       if (version < 2) {
         const state = persistedState as {

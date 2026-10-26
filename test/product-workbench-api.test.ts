@@ -155,3 +155,32 @@ describe("workbench uses the existing model API contract", () => {
     );
   });
 });
+
+test.each([
+  ["AI_DAILY_LIMIT", "今日"],
+  ["AI_RATE_LIMIT", "每分钟"],
+  ["AI_INPUT_LIMIT", "输入过长"],
+])(
+  "workbench explains server cost error %s and keeps the draft",
+  async (code, message) => {
+    const api = {
+      async chat(options: ChatOptions) {
+        options.onFinish(
+          "fixture raw body must not be shown",
+          new Response(null, {
+            status: code === "AI_INPUT_LIMIT" ? 413 : 429,
+            headers: { "X-AI-Error-Code": code },
+          }),
+        );
+      },
+    };
+    await expect(
+      requestWorkbenchModel(
+        api,
+        config,
+        messages,
+        new AbortController().signal,
+      ),
+    ).rejects.toThrow(message);
+  },
+);

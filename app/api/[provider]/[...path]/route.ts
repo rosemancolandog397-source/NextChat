@@ -19,10 +19,13 @@ import { handle as ai302Handler } from "../../302ai";
 
 async function handle(
   req: NextRequest,
-  { params }: { params: { provider: string; path: string[] } },
+  {
+    params: pendingParams,
+  }: { params: Promise<{ provider: string; path: string[] }> },
 ) {
+  const params = await pendingParams;
   const apiPath = `/api/${params.provider}`;
-  console.log(`[${params.provider} Route] params `, params);
+
   switch (apiPath) {
     case ApiPath.Azure:
       return azureHandler(req, { params });
@@ -63,23 +66,7 @@ async function handle(
 export const GET = handle;
 export const POST = handle;
 
-export const runtime = "edge";
-export const preferredRegion = [
-  "arn1",
-  "bom1",
-  "cdg1",
-  "cle1",
-  "cpt1",
-  "dub1",
-  "fra1",
-  "gru1",
-  "hnd1",
-  "iad1",
-  "icn1",
-  "kix1",
-  "lhr1",
-  "pdx1",
-  "sfo1",
-  "sin1",
-  "syd1",
-];
+// Node runtime avoids Edge first-response limits for slower model generations.
+export const runtime = "nodejs";
+export const maxDuration = 300;
+export const preferredRegion = "iad1";

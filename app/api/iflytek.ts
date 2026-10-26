@@ -5,7 +5,6 @@ import {
   ModelProvider,
   ServiceProvider,
 } from "@/app/constant";
-import { prettyObject } from "@/app/utils/format";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/api/auth";
 import { isModelNotavailableInServer } from "@/app/utils/model";
@@ -17,7 +16,6 @@ export async function handle(
   req: NextRequest,
   { params }: { params: { path: string[] } },
 ) {
-  console.log("[Iflytek Route] params ", params);
 
   if (req.method === "OPTIONS") {
     return NextResponse.json({ body: "OK" }, { status: 200 });
@@ -34,8 +32,8 @@ export async function handle(
     const response = await request(req);
     return response;
   } catch (e) {
-    console.error("[Iflytek] ", e);
-    return NextResponse.json(prettyObject(e));
+
+    return NextResponse.json({ error: true, message: "Upstream request failed" }, { status: 502 });
   }
 }
 
@@ -54,9 +52,6 @@ async function request(req: NextRequest) {
   if (baseUrl.endsWith("/")) {
     baseUrl = baseUrl.slice(0, -1);
   }
-
-  console.log("[Proxy] ", path);
-  console.log("[Base Url]", baseUrl);
 
   const timeoutId = setTimeout(
     () => {
@@ -106,7 +101,7 @@ async function request(req: NextRequest) {
         );
       }
     } catch (e) {
-      console.error(`[Iflytek] filter`, e);
+
     }
   }
   try {

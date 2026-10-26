@@ -7,7 +7,6 @@ export async function handle(
   req: NextRequest,
   { params }: { params: { path: string[] } },
 ) {
-  console.log("[Stability] params ", params);
 
   if (req.method === "OPTIONS") {
     return NextResponse.json({ body: "OK" }, { status: 200 });
@@ -28,9 +27,6 @@ export async function handle(
   }
 
   let path = `${req.nextUrl.pathname}`.replaceAll("/api/stability/", "");
-
-  console.log("[Stability Proxy] ", path);
-  console.log("[Stability Base Url]", baseUrl);
 
   const timeoutId = setTimeout(
     () => {
@@ -65,7 +61,7 @@ export async function handle(
   }
 
   const fetchUrl = `${baseUrl}/${path}`;
-  console.log("[Stability Url] ", fetchUrl);
+
   const fetchOptions: RequestInit = {
     headers: {
       "Content-Type": req.headers.get("Content-Type") || "multipart/form-data",

@@ -1,6 +1,8 @@
 import webpack from "webpack";
 
 const mode = process.env.BUILD_MODE ?? "standalone";
+const publicPrivacyMode = process.env.SERVER_ONLY_API_KEY === "1" ||
+  (process.env.NODE_ENV === "production" && mode !== "export" && !process.env.BUILD_APP);
 console.log("[Next] build mode", mode);
 
 const disableChunk = !!process.env.DISABLE_CHUNK || mode === "export";
@@ -92,10 +94,10 @@ if (mode !== "export") {
         source: "/google-fonts/:path*",
         destination: "https://fonts.googleapis.com/:path*",
       },
-      {
+      ...(!publicPrivacyMode ? [{
         source: "/sharegpt",
         destination: "https://sharegpt.com/api/conversations",
-      },
+      }] : []),
       {
         source: "/api/proxy/alibaba/:path*",
         destination: "https://dashscope.aliyuncs.com/api/:path*",

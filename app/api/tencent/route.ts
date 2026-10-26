@@ -1,18 +1,12 @@
 import { getServerSideConfig } from "@/app/config/server";
 import { TENCENT_BASE_URL, ModelProvider } from "@/app/constant";
-import { prettyObject } from "@/app/utils/format";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/api/auth";
 import { getHeader } from "@/app/utils/tencent";
 
 const serverConfig = getServerSideConfig();
 
-async function handle(
-  req: NextRequest,
-  { params }: { params: { path: string[] } },
-) {
-  console.log("[Tencent Route] params ", params);
-
+async function handle(req: NextRequest) {
   if (req.method === "OPTIONS") {
     return NextResponse.json({ body: "OK" }, { status: 200 });
   }
@@ -28,8 +22,8 @@ async function handle(
     const response = await request(req);
     return response;
   } catch (e) {
-    console.error("[Tencent] ", e);
-    return NextResponse.json(prettyObject(e));
+
+    return NextResponse.json({ error: true, message: "Upstream request failed" }, { status: 502 });
   }
 }
 
@@ -69,8 +63,6 @@ async function request(req: NextRequest) {
   if (baseUrl.endsWith("/")) {
     baseUrl = baseUrl.slice(0, -1);
   }
-
-  console.log("[Base Url]", baseUrl);
 
   const timeoutId = setTimeout(
     () => {

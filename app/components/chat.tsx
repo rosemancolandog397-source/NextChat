@@ -404,7 +404,7 @@ function ClearContextDivider() {
 
 export function ChatAction(props: {
   text: string;
-  icon: JSX.Element;
+  icon: React.JSX.Element;
   onClick: () => void;
 }) {
   const iconRef = useRef<HTMLDivElement>(null);
@@ -452,7 +452,7 @@ export function ChatAction(props: {
 }
 
 function useScrollToBottom(
-  scrollRef: RefObject<HTMLDivElement>,
+  scrollRef: RefObject<HTMLDivElement | null>,
   detach: boolean = false,
   messages: ChatMessage[],
 ) {
@@ -987,7 +987,7 @@ export function ShortcutKeyModal(props: { onClose: () => void }) {
   );
 }
 
-function _Chat() {
+function ChatBody() {
   type RenderMessage = ChatMessage & { preview?: boolean };
 
   const chatStore = useChatStore();
@@ -1448,8 +1448,7 @@ function _Chat() {
       doSubmit(text);
     },
     code: (text) => {
-      if (accessStore.disableFastLink) return;
-      console.log("[Command] got code from url: ", text);
+      if (clientConfig?.serverOnlyApiKey || accessStore.serverOnlyApiKey || accessStore.disableFastLink) return;
       showConfirm(Locale.URLCommand.Code + `code = ${text}`).then((res) => {
         if (res) {
           accessStore.update((access) => (access.accessCode = text));
@@ -1457,7 +1456,7 @@ function _Chat() {
       });
     },
     settings: (text) => {
-      if (accessStore.disableFastLink) return;
+      if (clientConfig?.serverOnlyApiKey || accessStore.serverOnlyApiKey || accessStore.disableFastLink) return;
 
       try {
         const payload = JSON.parse(text) as {
@@ -1465,7 +1464,6 @@ function _Chat() {
           url?: string;
         };
 
-        console.log("[Command] got settings from url: ", payload);
 
         if (payload.key || payload.url) {
           showConfirm(
@@ -2168,5 +2166,5 @@ function _Chat() {
 export function Chat() {
   const chatStore = useChatStore();
   const session = chatStore.currentSession();
-  return <_Chat key={session.id}></_Chat>;
+  return <ChatBody key={session.id}></ChatBody>;
 }

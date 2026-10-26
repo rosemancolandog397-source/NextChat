@@ -18,6 +18,8 @@ import ReloadButtonIcon from "../icons/reload.svg";
 import Locale from "../locales";
 import { Modal, showToast } from "./ui-lib";
 import { copyToClipboard, downloadAs } from "../utils";
+import { isPublicPrivacyMode } from "../utils/public-privacy";
+import { PUBLIC_CLOUD_DISABLED } from "../config/public-privacy";
 import { Path, ApiPath, REPO_URL } from "@/app/constant";
 import { Loading } from "./home";
 import styles from "./artifacts.module.scss";
@@ -124,6 +126,7 @@ export function ArtifactsShareButton({
     () => [location.origin, "#", Path.Artifacts, "/", name].join(""),
     [name],
   );
+  if (isPublicPrivacyMode()) return null;
   const upload = (code: string) =>
     id
       ? Promise.resolve({ id })
@@ -210,6 +213,7 @@ export function Artifacts() {
   const previewRef = useRef<HTMLPreviewHandler>(null);
 
   useEffect(() => {
+    if (isPublicPrivacyMode()) { setLoading(false); return; }
     if (id) {
       fetch(`${ApiPath.Artifacts}?id=${id}`)
         .then((res) => {
@@ -225,6 +229,8 @@ export function Artifacts() {
         });
     }
   }, [id]);
+
+  if (isPublicPrivacyMode()) return <p role="status">{PUBLIC_CLOUD_DISABLED}</p>;
 
   return (
     <div className={styles["artifacts"]}>

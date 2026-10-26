@@ -5,7 +5,6 @@ import {
   ModelProvider,
   ServiceProvider,
 } from "@/app/constant";
-import { prettyObject } from "@/app/utils/format";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/api/auth";
 import { isModelNotavailableInServer } from "@/app/utils/model";
@@ -16,7 +15,6 @@ export async function handle(
   req: NextRequest,
   { params }: { params: { path: string[] } },
 ) {
-  console.log("[GLM Route] params ", params);
 
   if (req.method === "OPTIONS") {
     return NextResponse.json({ body: "OK" }, { status: 200 });
@@ -33,8 +31,8 @@ export async function handle(
     const response = await request(req);
     return response;
   } catch (e) {
-    console.error("[GLM] ", e);
-    return NextResponse.json(prettyObject(e));
+
+    return NextResponse.json({ error: true, message: "Upstream request failed" }, { status: 502 });
   }
 }
 
@@ -54,9 +52,6 @@ async function request(req: NextRequest) {
     baseUrl = baseUrl.slice(0, -1);
   }
 
-  console.log("[Proxy] ", path);
-  console.log("[Base Url]", baseUrl);
-
   const timeoutId = setTimeout(
     () => {
       controller.abort();
@@ -65,7 +60,7 @@ async function request(req: NextRequest) {
   );
 
   const fetchUrl = `${baseUrl}${path}`;
-  console.log("[Fetch Url] ", fetchUrl);
+
   const fetchOptions: RequestInit = {
     headers: {
       "Content-Type": "application/json",
@@ -106,7 +101,7 @@ async function request(req: NextRequest) {
         );
       }
     } catch (e) {
-      console.error(`[GLM] filter`, e);
+
     }
   }
   try {

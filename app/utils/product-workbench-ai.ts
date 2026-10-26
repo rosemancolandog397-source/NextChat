@@ -4,6 +4,7 @@ import type {
   LLMConfig,
   RequestMessage,
 } from "../client/api";
+import { AI_COST_ERRORS, type AiCostErrorCode } from "../config/ai-cost-errors";
 import {
   availableTopics,
   confirmedSources,
@@ -72,8 +73,14 @@ export function requestWorkbenchModel(
       onFinish(message, response) {
         if (response && !response.ok) {
           const status = response.status;
+          const code = response.headers?.get("X-AI-Error-Code");
+          const costMessage =
+            code && Object.prototype.hasOwnProperty.call(AI_COST_ERRORS, code)
+              ? AI_COST_ERRORS[code as AiCostErrorCode]
+              : undefined;
           const reason =
-            status === 401 || status === 403
+            costMessage ??
+            (status === 401 || status === 403
               ? "认证或权限不足，请在 NextChat 设置中检查密钥和模型权限"
               : status === 429
               ? "请求过于频繁或额度受限，请稍后重试并检查余额"
@@ -81,7 +88,7 @@ export function requestWorkbenchModel(
               ? "模型服务额度不足，请检查服务商余额"
               : status >= 500
               ? "模型服务暂时不可用，请稍后重试"
-              : "模型服务拒绝请求，请检查接口地址及模型配置";
+              : "模型服务拒绝请求，请检查接口地址及模型配置");
           finish(
             undefined,
             new WorkbenchAiError(

@@ -1,5 +1,7 @@
 import tauriConfig from "../../src-tauri/tauri.conf.json";
 import { DEFAULT_INPUT_TEMPLATE } from "../constant";
+import { serverOnlyApiKeys } from "./key-policy";
+import { allowedAiModel } from "./ai-cost-policy";
 
 export const getBuildConfig = () => {
   if (typeof process === "undefined") {
@@ -39,6 +41,10 @@ export const getBuildConfig = () => {
     ...commitInfo,
     buildMode,
     isApp,
+    serverOnlyApiKey: serverOnlyApiKeys(process.env),
+    publicDefaultModel: serverOnlyApiKeys(process.env)
+      ? allowedAiModel(process.env)
+      : undefined,
     template: process.env.DEFAULT_INPUT_TEMPLATE ?? DEFAULT_INPUT_TEMPLATE,
   };
 };

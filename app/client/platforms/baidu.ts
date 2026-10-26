@@ -50,7 +50,7 @@ export class ErnieApi implements LLMApi {
 
     let baseUrl = "";
 
-    if (accessStore.useCustomConfig) {
+    if (accessStore.useCustomConfig && !getClientConfig()?.serverOnlyApiKey && !accessStore.serverOnlyApiKey) {
       baseUrl = accessStore.baiduUrl;
     }
 
@@ -128,7 +128,7 @@ export class ErnieApi implements LLMApi {
       // getAccessToken can not run in browser, because cors error
       if (!!getClientConfig()?.isApp) {
         const accessStore = useAccessStore.getState();
-        if (accessStore.useCustomConfig) {
+        if (accessStore.useCustomConfig && !getClientConfig()?.serverOnlyApiKey && !accessStore.serverOnlyApiKey) {
           if (accessStore.isValidBaidu()) {
             const { access_token } = await getAccessToken(
               accessStore.baiduApiKey,

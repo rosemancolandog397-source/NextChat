@@ -30,6 +30,7 @@ import { type ClientApi, getClientApi } from "../client/api";
 import { useAccessStore } from "../store";
 import clsx from "clsx";
 import { initializeMcpSystem, isMcpEnabled } from "../mcp/actions";
+import { LocalDataNotice } from "./local-data-notice";
 
 export function Loading(props: { noLogo?: boolean }) {
   return (
@@ -157,6 +158,7 @@ const loadAsyncGoogleFont = () => {
 export function WindowContent(props: { children: React.ReactNode }) {
   return (
     <div className={styles["window-content"]} id={SlotID.AppBody}>
+      <LocalDataNotice />
       {props?.children}
     </div>
   );

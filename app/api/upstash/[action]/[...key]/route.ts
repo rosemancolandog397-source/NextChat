@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { publicDataAccessBlocked } from "../../../public-privacy";
 
 async function handle(
   req: NextRequest,
-  { params }: { params: { action: string; key: string[] } },
+  {
+    params: pendingParams,
+  }: { params: Promise<{ action: string; key: string[] }> },
 ) {
+  const blocked = publicDataAccessBlocked();
+  if (blocked) return blocked;
+  const params = await pendingParams;
   const requestUrl = new URL(req.url);
   const endpoint = requestUrl.searchParams.get("endpoint");
 
@@ -26,7 +32,7 @@ async function handle(
 
   // only allow upstash get and set method
   if (params.action !== "get" && params.action !== "set") {
-    console.log("[Upstash Route] forbidden action ", params.action);
+
     return NextResponse.json(
       {
         error: true,
@@ -55,13 +61,7 @@ async function handle(
     duplex: "half",
   };
 
-  console.log("[Upstash Proxy]", targetUrl, fetchOptions);
   const fetchResult = await fetch(targetUrl, fetchOptions);
-
-  console.log("[Any Proxy]", targetUrl, {
-    status: fetchResult.status,
-    statusText: fetchResult.statusText,
-  });
 
   return fetchResult;
 }

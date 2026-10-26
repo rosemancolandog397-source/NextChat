@@ -84,6 +84,8 @@ import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarPicker } from "./emoji";
 import { getClientConfig } from "../config/client";
 import { useSyncStore } from "../store/sync";
+import { isPublicPrivacyMode } from "../utils/public-privacy";
+import { PUBLIC_CLOUD_DISABLED } from "../config/public-privacy";
 import { nanoid } from "nanoid";
 import { useMaskStore } from "../store/mask";
 import { ProviderType } from "../utils/cloud";
@@ -1742,7 +1744,9 @@ export function Settings() {
           </ListItem>
         </List>
 
-        <SyncItems />
+        {isPublicPrivacyMode() ? (
+          <p role="note">{PUBLIC_CLOUD_DISABLED} 聊天记录和 PRD 仍可单独导出。</p>
+        ) : <SyncItems />}
 
         <List>
           <ListItem
@@ -1819,7 +1823,9 @@ export function Settings() {
           {saasStartComponent}
           {accessCodeComponent}
 
-          {!accessStore.hideUserApiKey && (
+          {!clientConfig?.serverOnlyApiKey &&
+            !accessStore.serverOnlyApiKey &&
+            !accessStore.hideUserApiKey && (
             <>
               {useCustomConfigComponent}
 

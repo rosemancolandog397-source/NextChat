@@ -3,10 +3,31 @@ import { getServerSideConfig } from "../config/server";
 import { OPENAI_BASE_URL, ServiceProvider } from "../constant";
 import { cloudflareAIGatewayUrl } from "../utils/cloudflare";
 import { getModelProvider, isModelNotavailableInServer } from "../utils/model";
+import { openAIResourcePath } from "../client/openai-path";
+import { AiCostError, aiCostResponse, prepareAiRequest } from "./ai-cost-guard";
+import { credentialSafeResponse } from "./credential-response";
 
 const serverConfig = getServerSideConfig();
 
 export async function requestOpenai(req: NextRequest) {
+  let protectedBody: string | undefined;
+  if (serverConfig.serverOnlyApiKey) {
+    if (
+      req.method !== "POST" ||
+      req.nextUrl.pathname !== "/api/openai/v1/chat/completions"
+    ) {
+      return aiCostResponse(new AiCostError("AI_ENDPOINT_DENIED", 403));
+    }
+    try {
+      protectedBody = await prepareAiRequest(req);
+    } catch (error) {
+      return aiCostResponse(
+        error instanceof AiCostError
+          ? error
+          : new AiCostError("AI_BUDGET_UNAVAILABLE", 503),
+      );
+    }
+  }
   const controller = new AbortController();
 
   const isAzure = req.nextUrl.pathname.includes("azure/deployments");
@@ -39,9 +60,6 @@ export async function requestOpenai(req: NextRequest) {
   if (baseUrl.endsWith("/")) {
     baseUrl = baseUrl.slice(0, -1);
   }
-
-  console.log("[Proxy] ", path);
-  console.log("[Base Url]", baseUrl);
 
   const timeoutId = setTimeout(
     () => {
@@ -82,14 +100,15 @@ export async function requestOpenai(req: NextRequest) {
           }
         });
       if (realDeployName) {
-        console.log("[Replace with DeployId", realDeployName);
         path = path.replaceAll(modelName, realDeployName);
       }
     }
   }
 
-  const fetchUrl = cloudflareAIGatewayUrl(`${baseUrl}/${path}`);
-  console.log("fetchUrl", fetchUrl);
+  const fetchUrl = cloudflareAIGatewayUrl(
+    `${baseUrl}/${isAzure ? path : openAIResourcePath(baseUrl, path)}`,
+  );
+
   const fetchOptions: RequestInit = {
     headers: {
       "Content-Type": "application/json",
@@ -100,7 +119,7 @@ export async function requestOpenai(req: NextRequest) {
       }),
     },
     method: req.method,
-    body: req.body,
+    body: protectedBody ?? req.body,
     // to fix #2485: https://stackoverflow.com/questions/55920957/cloudflare-worker-typeerror-one-time-use-body
     redirect: "manual",
     // @ts-ignore
@@ -109,7 +128,7 @@ export async function requestOpenai(req: NextRequest) {
   };
 
   // #1815 try to refuse gpt4 request
-  if (serverConfig.customModels && req.body) {
+  if (!serverConfig.serverOnlyApiKey && serverConfig.customModels && req.body) {
     try {
       const clonedBody = await req.text();
       fetchOptions.body = clonedBody;
@@ -138,28 +157,28 @@ export async function requestOpenai(req: NextRequest) {
           },
         );
       }
-    } catch (e) {
-      console.error("[OpenAI] gpt4 filter", e);
-    }
+    } catch (e) {}
   }
 
   try {
     const res = await fetch(fetchUrl, fetchOptions);
-
-    // Extract the OpenAI-Organization header from the response
-    const openaiOrganizationHeader = res.headers.get("OpenAI-Organization");
-
-    // Check if serverConfig.openaiOrgId is defined and not an empty string
-    if (serverConfig.openaiOrgId && serverConfig.openaiOrgId.trim() !== "") {
-      // If openaiOrganizationHeader is present, log it; otherwise, log that the header is not present
-      console.log("[Org ID]", openaiOrganizationHeader);
-    } else {
-      console.log("[Org ID] is not set up.");
+    if (serverConfig.serverOnlyApiKey) {
+      return credentialSafeResponse(res, [
+        authValue.replace(/^Bearer\s+/i, ""), serverConfig.apiKey,
+      ]);
     }
 
     // to prevent browser prompt for credentials
     const newHeaders = new Headers(res.headers);
     newHeaders.delete("www-authenticate");
+    for (const name of [
+      "authorization",
+      "api-key",
+      "x-api-key",
+      "x-goog-api-key",
+    ]) {
+      newHeaders.delete(name);
+    }
     // to disable nginx buffering
     newHeaders.set("X-Accel-Buffering", "no");
 

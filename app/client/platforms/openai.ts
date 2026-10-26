@@ -44,6 +44,7 @@ import {
   getTimeoutMSByModel,
 } from "@/app/utils";
 import { fetch } from "@/app/utils/stream";
+import { openAIResourcePath } from "../openai-path";
 
 export interface OpenAIListModelResponse {
   object: string;
@@ -88,7 +89,9 @@ export class ChatGPTApi implements LLMApi {
     let baseUrl = "";
 
     const isAzure = path.includes("deployments");
-    if (accessStore.useCustomConfig) {
+    const serverOnly =
+      getClientConfig()?.serverOnlyApiKey || accessStore.serverOnlyApiKey;
+    if (accessStore.useCustomConfig && !serverOnly) {
       if (isAzure && !accessStore.isValidAzure()) {
         throw Error(
           "incomplete azure config, please check it in your settings page",
@@ -118,7 +121,9 @@ export class ChatGPTApi implements LLMApi {
     console.log("[Proxy Endpoint] ", baseUrl, path);
 
     // try rebuild url, when using cloudflare ai gateway in client
-    return cloudflareAIGatewayUrl([baseUrl, path].join("/"));
+    return cloudflareAIGatewayUrl(
+      [baseUrl, isAzure ? path : openAIResourcePath(baseUrl, path)].join("/"),
+    );
   }
 
   async extractMessage(res: any) {

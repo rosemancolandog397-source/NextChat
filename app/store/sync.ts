@@ -12,6 +12,7 @@ import { downloadAs, readFromFile } from "../utils";
 import { showToast } from "../components/ui-lib";
 import Locale from "../locales";
 import { createSyncClient, ProviderType } from "../utils/cloud";
+import { assertPrivateDataFeatures, isPublicPrivacyMode } from "../utils/public-privacy";
 
 export interface WebDavConfig {
   server: string;
@@ -47,6 +48,7 @@ export const useSyncStore = createPersistStore(
   DEFAULT_SYNC_STATE,
   (set, get) => ({
     cloudSync() {
+      if (isPublicPrivacyMode()) return false;
       const config = get()[get().provider];
       return Object.values(config).every((c) => c.toString().length > 0);
     },
@@ -56,6 +58,7 @@ export const useSyncStore = createPersistStore(
     },
 
     export() {
+      assertPrivateDataFeatures();
       const state = getLocalAppState();
       const datePart = isApp
         ? `${new Date().toLocaleDateString().replace(/\//g, "_")} ${new Date()
@@ -68,6 +71,7 @@ export const useSyncStore = createPersistStore(
     },
 
     async import() {
+      assertPrivateDataFeatures();
       const rawContent = await readFromFile();
 
       try {
@@ -83,12 +87,14 @@ export const useSyncStore = createPersistStore(
     },
 
     getClient() {
+      assertPrivateDataFeatures();
       const provider = get().provider;
       const client = createSyncClient(provider, get());
       return client;
     },
 
     async sync() {
+      assertPrivateDataFeatures();
       const localState = getLocalAppState();
       const provider = get().provider;
       const config = get()[provider];
@@ -120,6 +126,7 @@ export const useSyncStore = createPersistStore(
     },
 
     async check() {
+      assertPrivateDataFeatures();
       const client = this.getClient();
       return await client.check();
     },

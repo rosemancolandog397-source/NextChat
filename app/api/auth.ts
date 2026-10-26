@@ -3,17 +3,6 @@ import { getServerSideConfig } from "../config/server";
 import md5 from "spark-md5";
 import { ACCESS_CODE_PREFIX, ModelProvider } from "../constant";
 
-function getIP(req: NextRequest) {
-  let ip = req.ip ?? req.headers.get("x-real-ip");
-  const forwardedFor = req.headers.get("x-forwarded-for");
-
-  if (!ip && forwardedFor) {
-    ip = forwardedFor.split(",").at(0) ?? "";
-  }
-
-  return ip;
-}
-
 function parseApiKey(bearToken: string) {
   const token = bearToken.trim().replaceAll("Bearer ", "").trim();
   const isApiKey = !token.startsWith(ACCESS_CODE_PREFIX);
@@ -33,11 +22,24 @@ export function auth(req: NextRequest, modelProvider: ModelProvider) {
   const hashedCode = md5.hash(accessCode ?? "").trim();
 
   const serverConfig = getServerSideConfig();
-  console.log("[Auth] allowed hashed codes: ", [...serverConfig.codes]);
-  console.log("[Auth] got access code:", accessCode);
-  console.log("[Auth] hashed access code:", hashedCode);
-  console.log("[User IP] ", getIP(req));
-  console.log("[Time] ", new Date().toLocaleString());
+  if (
+    serverConfig.serverOnlyApiKey &&
+    (modelProvider !== ModelProvider.GPT ||
+      !["/api/openai/v1/chat/completions", "/api/openai/v1/models"].includes(
+        req.nextUrl.pathname,
+      ))
+  ) {
+    return { error: true, msg: "本站仅开放指定 DeepSeek 的文本聊天接口" };
+  }
+  if (
+    serverConfig.serverOnlyApiKey &&
+    (apiKey ||
+      req.headers.get("api-key") ||
+      req.headers.get("x-api-key") ||
+      req.headers.get("x-goog-api-key"))
+  ) {
+    return { error: true, msg: "client api keys are disabled" };
+  }
 
   if (serverConfig.needCode && !serverConfig.codes.has(hashedCode) && !apiKey) {
     return {
@@ -114,13 +116,10 @@ export function auth(req: NextRequest, modelProvider: ModelProvider) {
     }
 
     if (systemApiKey) {
-      console.log("[Auth] use system api key");
       req.headers.set("Authorization", `Bearer ${systemApiKey}`);
-    } else {
-      console.log("[Auth] admin did not provide an api key");
+    } else if (serverConfig.serverOnlyApiKey) {
+      return { error: true, msg: "server api key is not configured" };
     }
-  } else {
-    console.log("[Auth] use user api key");
   }
 
   return {

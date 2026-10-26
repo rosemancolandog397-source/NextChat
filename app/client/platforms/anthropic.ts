@@ -391,7 +391,7 @@ export class ClaudeApi implements LLMApi {
 
     let baseUrl: string = "";
 
-    if (accessStore.useCustomConfig) {
+    if (accessStore.useCustomConfig && !getClientConfig()?.serverOnlyApiKey && !accessStore.serverOnlyApiKey) {
       baseUrl = accessStore.anthropicUrl;
     }
 

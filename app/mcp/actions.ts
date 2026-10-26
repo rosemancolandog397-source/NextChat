@@ -17,6 +17,7 @@ import {
 import fs from "fs/promises";
 import path from "path";
 import md5 from "spark-md5";
+import { serverOnlyApiKeys } from "../config/key-policy";
 
 const logger = new MCPClientLogger("MCP Actions");
 const CONFIG_PATH = path.join(process.cwd(), "app/mcp/mcp_config.json");
@@ -163,7 +164,7 @@ async function initializeSingleClient(
         tools: null,
         errorMsg: error instanceof Error ? error.message : String(error),
       });
-      logger.error(`Failed to initialize client [${clientId}]: ${error}`);
+      logger.error("MCP operation failed");
     });
 }
 
@@ -185,7 +186,7 @@ export async function initializeMcpSystem(accessCode: string) {
     }
     return config;
   } catch (error) {
-    logger.error(`Failed to initialize MCP system: ${error}`);
+    logger.error("MCP operation failed");
     throw error;
   }
 }
@@ -222,7 +223,7 @@ export async function addMcpServer(
 
     return newConfig;
   } catch (error) {
-    logger.error(`Failed to add server [${clientId}]: ${error}`);
+    logger.error("MCP operation failed");
     throw error;
   }
 }
@@ -259,7 +260,7 @@ export async function pauseMcpServer(clientId: string, accessCode: string) {
 
     return newConfig;
   } catch (error) {
-    logger.error(`Failed to pause server [${clientId}]: ${error}`);
+    logger.error("MCP operation failed");
     throw error;
   }
 }
@@ -313,11 +314,11 @@ export async function resumeMcpServer(
         tools: null,
         errorMsg: error instanceof Error ? error.message : String(error),
       });
-      logger.error(`Failed to initialize client [${clientId}]: ${error}`);
+      logger.error("MCP operation failed");
       throw error;
     }
   } catch (error) {
-    logger.error(`Failed to resume server [${clientId}]: ${error}`);
+    logger.error("MCP operation failed");
     throw error;
   }
 }
@@ -343,7 +344,7 @@ export async function removeMcpServer(clientId: string, accessCode: string) {
 
     return newConfig;
   } catch (error) {
-    logger.error(`Failed to remove server [${clientId}]: ${error}`);
+    logger.error("MCP operation failed");
     throw error;
   }
 }
@@ -370,7 +371,7 @@ export async function restartAllClients(accessCode: string) {
     }
     return config;
   } catch (error) {
-    logger.error(`Failed to restart clients: ${error}`);
+    logger.error("MCP operation failed");
     throw error;
   }
 }
@@ -390,7 +391,7 @@ export async function executeMcpAction(
     logger.info(`Executing request for [${clientId}]`);
     return await executeRequest(client.client, request);
   } catch (error) {
-    logger.error(`Failed to execute request for [${clientId}]: ${error}`);
+    logger.error("MCP operation failed");
     throw error;
   }
 }
@@ -404,7 +405,7 @@ export async function getMcpConfigFromFile(
     const configStr = await fs.readFile(CONFIG_PATH, "utf-8");
     return JSON.parse(configStr);
   } catch (error) {
-    logger.error(`Failed to load MCP config, using default config: ${error}`);
+    logger.error("MCP operation failed");
     return DEFAULT_MCP_CONFIG;
   }
 }
@@ -422,5 +423,5 @@ async function updateMcpConfig(config: McpConfigData): Promise<void> {
 
 // 检查 MCP 是否启用
 export async function isMcpEnabled() {
-  return process.env.ENABLE_MCP === "true";
+  return !serverOnlyApiKeys(process.env) && process.env.ENABLE_MCP === "true";
 }

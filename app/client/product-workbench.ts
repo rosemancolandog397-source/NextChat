@@ -2,6 +2,7 @@ import { getClientApi } from "./api";
 import { ChatGPTApi } from "./platforms/openai";
 import { OpenaiPath, ServiceProvider } from "../constant";
 import { useAccessStore } from "../store";
+import { getClientConfig } from "../config/client";
 
 // Only adjust the resource path on a fresh workbench client. Authentication,
 // payload construction, gateway handling and all other providers stay upstream.
@@ -14,9 +15,17 @@ export function workbenchResourcePath(base: string, resource: string): string {
 
 class WorkbenchOpenAI extends ChatGPTApi {
   path(resource: string): string {
-    const { useCustomConfig, openaiUrl } = useAccessStore.getState();
+    const { useCustomConfig, openaiUrl, serverOnlyApiKey } =
+      useAccessStore.getState();
     return super.path(
-      workbenchResourcePath(useCustomConfig ? openaiUrl : "", resource),
+      workbenchResourcePath(
+        useCustomConfig &&
+          !serverOnlyApiKey &&
+          !getClientConfig()?.serverOnlyApiKey
+          ? openaiUrl
+          : "",
+        resource,
+      ),
     );
   }
 }

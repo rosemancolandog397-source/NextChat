@@ -34,7 +34,7 @@ export class SparkApi implements LLMApi {
 
     let baseUrl = "";
 
-    if (accessStore.useCustomConfig) {
+    if (accessStore.useCustomConfig && !getClientConfig()?.serverOnlyApiKey && !accessStore.serverOnlyApiKey) {
       baseUrl = accessStore.iflytekUrl;
     }
 

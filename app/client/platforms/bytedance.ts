@@ -55,7 +55,7 @@ export class DoubaoApi implements LLMApi {
 
     let baseUrl = "";
 
-    if (accessStore.useCustomConfig) {
+    if (accessStore.useCustomConfig && !getClientConfig()?.serverOnlyApiKey && !accessStore.serverOnlyApiKey) {
       baseUrl = accessStore.bytedanceUrl;
     }
 

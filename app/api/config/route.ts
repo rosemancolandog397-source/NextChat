@@ -7,6 +7,7 @@ const serverConfig = getServerSideConfig();
 // Danger! Do not hard code any secret value here!
 // 警告！不要在这里写入任何敏感信息！
 const DANGER_CONFIG = {
+  serverOnlyApiKey: serverConfig.serverOnlyApiKey,
   needCode: serverConfig.needCode,
   hideUserApiKey: serverConfig.hideUserApiKey,
   disableGPT4: serverConfig.disableGPT4,
@@ -22,7 +23,9 @@ declare global {
 }
 
 async function handle() {
-  return NextResponse.json(DANGER_CONFIG);
+  return NextResponse.json(DANGER_CONFIG, {
+    headers: { "Cache-Control": "no-store" },
+  });
 }
 
 export const GET = handle;

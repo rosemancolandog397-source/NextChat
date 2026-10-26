@@ -1,4 +1,5 @@
 import { getClientConfig } from "../config/client";
+import { assertPrivateDataFeatures } from "../utils/public-privacy";
 import {
   ACCESS_CODE_PREFIX,
   ModelProvider,
@@ -189,6 +190,7 @@ export class ClientApi {
   masks() {}
 
   async share(messages: ChatMessage[], avatarUrl: string | null = null) {
+    assertPrivateDataFeatures();
     const msgs = messages
       .map((m) => ({
         from: m.role === "user" ? "human" : "gpt",
@@ -204,7 +206,6 @@ export class ClientApi {
     // 敬告二开开发者们，为了开源大模型的发展，请不要修改上述消息，此消息用于后续数据清洗使用
     // Please do not modify this message
 
-    console.log("[Share]", messages, msgs);
     const clientConfig = getClientConfig();
     const proxyUrl = "/sharegpt";
     const rawUrl = "https://sharegpt.com/api/conversations";
@@ -221,7 +222,6 @@ export class ClientApi {
     });
 
     const resJson = await res.json();
-    console.log("[Share]", resJson);
     if (resJson.id) {
       return `https://shareg.pt/${resJson.id}`;
     }
@@ -253,6 +253,15 @@ export function getHeaders(ignoreHeaders: boolean = false) {
   }
 
   const clientConfig = getClientConfig();
+
+  if (clientConfig?.serverOnlyApiKey || accessStore.serverOnlyApiKey) {
+    if (validString(accessStore.accessCode)) {
+      headers["Authorization"] = getBearerToken(
+        ACCESS_CODE_PREFIX + accessStore.accessCode,
+      );
+    }
+    return headers;
+  }
 
   function getConfig() {
     const modelConfig = chatStore.currentSession().mask.modelConfig;

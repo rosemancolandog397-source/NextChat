@@ -5,12 +5,18 @@ export async function handle(
   req: NextRequest,
   { params }: { params: { path: string[] } },
 ) {
-  console.log("[Proxy Route] params ", params);
 
   if (req.method === "OPTIONS") {
     return NextResponse.json({ body: "OK" }, { status: 200 });
   }
   const serverConfig = getServerSideConfig();
+  // A client-controlled destination must never receive the shared server key.
+  if (serverConfig.serverOnlyApiKey) {
+    return NextResponse.json(
+      { error: "custom proxy is disabled in server-only mode" },
+      { status: 403 },
+    );
+  }
 
   // remove path params from searchParams
   req.nextUrl.searchParams.delete("path");
@@ -35,7 +41,7 @@ export async function handle(
   );
   // if dalle3 use openai api key
     const baseUrl = req.headers.get("x-base-url");
-    if (baseUrl?.includes("api.openai.com")) {
+    if (baseUrl === "https://api.openai.com") {
       if (!serverConfig.apiKey) {
         return NextResponse.json(
           { error: "OpenAI API key not configured" },

@@ -1,5 +1,10 @@
 {
-    "github": {
-        "silent": true
-    }
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "HUSKY=0 corepack yarn install --frozen-lockfile --production=false",
+  "buildCommand": "corepack yarn build",
+  "fluid": true,
+  "git": {
+    "deploymentEnabled": false
+  }
 }

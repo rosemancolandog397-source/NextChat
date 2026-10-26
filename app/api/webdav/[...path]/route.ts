@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { STORAGE_KEY, internalAllowedWebDavEndpoints } from "../../../constant";
 import { getServerSideConfig } from "@/app/config/server";
+import { publicDataAccessBlocked } from "../../public-privacy";
 
 const config = getServerSideConfig();
 
@@ -19,8 +20,11 @@ const normalizeUrl = (url: string) => {
 
 async function handle(
   req: NextRequest,
-  { params }: { params: { path: string[] } },
+  { params: pendingParams }: { params: Promise<{ path: string[] }> },
 ) {
+  const blocked = publicDataAccessBlocked();
+  if (blocked) return blocked;
+  const params = await pendingParams;
   if (req.method === "OPTIONS") {
     return NextResponse.json({ body: "OK" }, { status: 200 });
   }
@@ -139,23 +143,7 @@ async function handle(
     duplex: "half",
   };
 
-  let fetchResult;
-
-  try {
-    fetchResult = await fetch(targetUrl, fetchOptions);
-  } finally {
-    console.log(
-      "[Any Proxy]",
-      targetUrl,
-      {
-        method: method,
-      },
-      {
-        status: fetchResult?.status,
-        statusText: fetchResult?.statusText,
-      },
-    );
-  }
+  const fetchResult = await fetch(targetUrl, fetchOptions);
 
   return fetchResult;
 }

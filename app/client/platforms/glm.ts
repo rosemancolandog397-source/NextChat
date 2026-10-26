@@ -124,7 +124,7 @@ export class ChatGLMApi implements LLMApi {
     const accessStore = useAccessStore.getState();
     let baseUrl = "";
 
-    if (accessStore.useCustomConfig) {
+    if (accessStore.useCustomConfig && !getClientConfig()?.serverOnlyApiKey && !accessStore.serverOnlyApiKey) {
       baseUrl = accessStore.chatglmUrl;
     }
 

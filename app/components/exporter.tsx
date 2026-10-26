@@ -36,6 +36,8 @@ import { toBlob, toPng } from "html-to-image";
 import { prettyObject } from "../utils/format";
 import { EXPORT_MESSAGE_CLASS_NAME } from "../constant";
 import { getClientConfig } from "../config/client";
+import { isPublicPrivacyMode } from "../utils/public-privacy";
+import { PUBLIC_CLOUD_DISABLED } from "../config/public-privacy";
 import { type ClientApi, getClientApi } from "../client/api";
 import { getMessageTextContent } from "../utils";
 import { MaskAvatar } from "./mask";
@@ -311,6 +313,7 @@ export function PreviewActions(props: {
   const [shouldExport, setShouldExport] = useState(false);
   const config = useAppConfig();
   const onRenderMsgs = (msgs: ChatMessage[]) => {
+    if (isPublicPrivacyMode()) { setShouldExport(false); return; }
     setShouldExport(false);
 
     const api: ClientApi = getClientApi(config.modelConfig.providerName);
@@ -355,6 +358,7 @@ export function PreviewActions(props: {
   };
 
   const share = async () => {
+    if (isPublicPrivacyMode()) { showToast(PUBLIC_CLOUD_DISABLED); return; }
     if (props.messages?.length) {
       setLoading(true);
       setShouldExport(true);
@@ -380,13 +384,13 @@ export function PreviewActions(props: {
           icon={<DownloadIcon />}
           onClick={props.download}
         ></IconButton>
-        <IconButton
+        {!isPublicPrivacyMode() && <IconButton
           text={Locale.Export.Share}
           bordered
           shadow
           icon={loading ? <LoadingIcon /> : <ShareIcon />}
           onClick={share}
-        ></IconButton>
+        ></IconButton>}
       </div>
       <div
         style={{

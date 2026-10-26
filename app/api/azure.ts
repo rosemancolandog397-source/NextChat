@@ -1,5 +1,4 @@
 import { ModelProvider } from "@/app/constant";
-import { prettyObject } from "@/app/utils/format";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "./auth";
 import { requestOpenai } from "./common";
@@ -8,7 +7,6 @@ export async function handle(
   req: NextRequest,
   { params }: { params: { path: string[] } },
 ) {
-  console.log("[Azure Route] params ", params);
 
   if (req.method === "OPTIONS") {
     return NextResponse.json({ body: "OK" }, { status: 200 });
@@ -26,7 +24,7 @@ export async function handle(
   try {
     return await requestOpenai(req);
   } catch (e) {
-    console.error("[Azure] ", e);
-    return NextResponse.json(prettyObject(e));
+
+    return NextResponse.json({ error: true, message: "Upstream request failed" }, { status: 502 });
   }
 }

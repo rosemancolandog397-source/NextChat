@@ -1,10 +1,11 @@
 import { type OpenAIListModelResponse } from "@/app/client/platforms/openai";
 import { getServerSideConfig } from "@/app/config/server";
 import { ModelProvider, OpenaiPath } from "@/app/constant";
-import { prettyObject } from "@/app/utils/format";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "./auth";
 import { requestOpenai } from "./common";
+import { AiCostError, aiCostResponse } from "./ai-cost-guard";
+import { allowedAiModel } from "../config/ai-cost-policy";
 
 const ALLOWED_PATH = new Set(Object.values(OpenaiPath));
 
@@ -30,8 +31,6 @@ export async function handle(
   req: NextRequest,
   { params }: { params: { path: string[] } },
 ) {
-  console.log("[OpenAI Route] params ", params);
-
   if (req.method === "OPTIONS") {
     return NextResponse.json({ body: "OK" }, { status: 200 });
   }
@@ -39,7 +38,6 @@ export async function handle(
   const subpath = params.path.join("/");
 
   if (!ALLOWED_PATH.has(subpath)) {
-    console.log("[OpenAI Route] forbidden path ", subpath);
     return NextResponse.json(
       {
         error: true,
@@ -58,6 +56,19 @@ export async function handle(
     });
   }
 
+  if (getServerSideConfig().serverOnlyApiKey) {
+    if (subpath === OpenaiPath.ListModelPath && req.method === "GET") {
+      const model = allowedAiModel(process.env);
+      return NextResponse.json({
+        object: "list",
+        data: model ? [{ id: model, object: "model" }] : [],
+      });
+    }
+    if (subpath !== OpenaiPath.ChatPath || req.method !== "POST") {
+      return aiCostResponse(new AiCostError("AI_ENDPOINT_DENIED", 403));
+    }
+  }
+
   try {
     const response = await requestOpenai(req);
 
@@ -72,7 +83,9 @@ export async function handle(
 
     return response;
   } catch (e) {
-    console.error("[OpenAI] ", e);
-    return NextResponse.json(prettyObject(e));
+    return NextResponse.json(
+      { error: true, message: "Upstream request failed" },
+      { status: 502 },
+    );
   }
 }

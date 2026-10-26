@@ -15,6 +15,7 @@ import {
   ServiceProvider,
 } from "../constant";
 import { createPersistStore } from "../utils/store";
+import { normalizeModelSelection } from "../utils/model-initialization";
 import type { Voice } from "rt-client";
 
 export type ModelType = (typeof DEFAULT_MODELS)[number]["name"];
@@ -63,7 +64,7 @@ export const DEFAULT_CONFIG = {
   customModels: "",
   models: DEFAULT_MODELS as any as LLMModel[],
 
-  modelConfig: {
+  modelConfig: normalizeModelSelection({
     model: "gpt-4o-mini" as ModelType,
     providerName: "OpenAI" as ServiceProvider,
     temperature: 0.5,
@@ -81,7 +82,7 @@ export const DEFAULT_CONFIG = {
     size: "1024x1024" as ModelSize,
     quality: "standard" as DalleQuality,
     style: "vivid" as DalleStyle,
-  },
+  }, config),
 
   ttsConfig: {
     enable: false,
@@ -199,16 +200,22 @@ export const useAppConfig = createPersistStore(
 
     merge(persistedState, currentState) {
       const state = persistedState as ChatConfig | undefined;
-      if (!state) return { ...currentState };
+      if (!state) return {
+        ...currentState,
+        modelConfig: normalizeModelSelection(currentState.modelConfig),
+      };
       const models = currentState.models.slice();
-      state.models.forEach((pModel) => {
+      (state.models ?? []).forEach((pModel) => {
         const idx = models.findIndex(
           (v) => v.name === pModel.name && v.provider === pModel.provider,
         );
         if (idx !== -1) models[idx] = pModel;
         else models.push(pModel);
       });
-      return { ...currentState, ...state, models: models };
+      return {
+        ...currentState, ...state, models,
+        modelConfig: normalizeModelSelection({ ...currentState.modelConfig, ...state.modelConfig }),
+      };
     },
 
     migrate(persistedState, version) {
