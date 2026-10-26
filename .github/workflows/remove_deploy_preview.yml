@@ -1,40 +1,83 @@
-name: Removedeploypreview
+name: Remove trusted preview
 
-permissions:
-  contents: read
-  statuses: write
-  pull-requests: write
-
-env:
-  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
+# Metadata-only processing: never checkout PR code or execute repository scripts.
 on:
   pull_request_target:
-    types:
-      - closed
+    types: [closed]
+
+permissions: {}
+
+concurrency:
+  group: trusted-preview-${{ github.repository }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
 
 jobs:
   delete-deployments:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions: {}
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Extract branch name
-        shell: bash
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-        id: extract_branch
-
-      - name: Hash branch name
-        uses: pplanel/hash-calculator-action@v1.3.1
-        id: hash_branch
-        with:
-          input: ${{ steps.extract_branch.outputs.branch }}
-          method: MD5
-
-      - name: Call the delete-deployment-preview.sh script
+      - name: Remove only this repository and PR's preview deployments
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
-          META_TAG: ${{ steps.hash_branch.outputs.digest }}
-        run: |
-          bash ./scripts/delete-deployment-preview.sh
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        with:
+          script: |
+            const { VERCEL_TOKEN: token, VERCEL_ORG_ID: teamId,
+              VERCEL_PROJECT_ID: projectId } = process.env;
+            if (!token || !teamId || !projectId) {
+              core.notice('Vercel credentials are not configured; cleanup skipped.');
+              return;
+            }
+            const prNumber = context.payload.pull_request.number;
+            if (!Number.isSafeInteger(prNumber) || prNumber < 1) {
+              throw new Error('Invalid PR number; cleanup stopped.');
+            }
+            const repository = `${context.repo.owner}/${context.repo.repo}`;
+            const request = async (url, method = 'GET') => {
+              const response = await fetch(url, {
+                method,
+                headers: { Authorization: `Bearer ${token}` },
+                redirect: 'error',
+                signal: AbortSignal.timeout(30000),
+              });
+              if (method === 'DELETE' && response.status === 404) return null;
+              if (!response.ok) throw new Error(`Vercel API HTTP ${response.status}`);
+              return method === 'GET' ? response.json() : null;
+            };
+            let cursor;
+            let removed = 0;
+            for (let page = 0; page < 100; page++) {
+              const url = new URL('https://api.vercel.com/v6/deployments');
+              url.search = new URLSearchParams({ projectId, teamId, limit: '100',
+                ...(cursor === undefined ? {} : { until: String(cursor) }) });
+              const data = await request(url);
+              if (!Array.isArray(data.deployments)) {
+                throw new Error('Unexpected Vercel response; cleanup stopped.');
+              }
+              for (const deployment of data.deployments) {
+                const meta = deployment.meta ?? {};
+                if ((deployment.target != null && deployment.target !== 'preview') ||
+                    meta.preview_source !== 'trusted-default-branch' ||
+                    meta.preview_repository !== repository ||
+                    meta.preview_pr !== String(prNumber)) continue;
+                if (typeof deployment.uid !== 'string' ||
+                    !/^dpl_[a-zA-Z0-9]+$/.test(deployment.uid)) {
+                  throw new Error('Invalid deployment ID; cleanup stopped.');
+                }
+                const remove = new URL(`https://api.vercel.com/v13/deployments/${deployment.uid}`);
+                remove.search = new URLSearchParams({ teamId });
+                await request(remove, 'DELETE');
+                removed++;
+              }
+              const next = data.pagination?.next;
+              if (next === null || next === undefined) break;
+              if (!Number.isSafeInteger(next) || next < 0 ||
+                  (cursor !== undefined && next >= cursor) || page === 99) {
+                throw new Error('Invalid or excessive pagination; cleanup stopped.');
+              }
+              cursor = next;
+            }
+            core.info(`Removed ${removed} matching preview deployment(s).`);
