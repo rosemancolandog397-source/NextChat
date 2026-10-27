@@ -730,7 +730,8 @@ export function Settings() {
         <input
           aria-label={Locale.Settings.Access.CustomEndpoint.Title}
           type="checkbox"
-          checked={accessStore.useCustomConfig}
+          checked={!!clientConfig?.byokMode || accessStore.useCustomConfig}
+          disabled={!!clientConfig?.byokMode}
           onChange={(e) =>
             accessStore.update(
               (access) => (access.useCustomConfig = e.currentTarget.checked),
@@ -750,7 +751,8 @@ export function Settings() {
         <input
           aria-label={Locale.Settings.Access.OpenAI.Endpoint.Title}
           type="text"
-          value={accessStore.openaiUrl}
+          value={clientConfig?.byokMode ? "https://openrouter.ai/api/v1" : accessStore.openaiUrl}
+          disabled={!!clientConfig?.byokMode}
           placeholder={OPENAI_BASE_URL}
           onChange={(e) =>
             accessStore.update(
@@ -761,7 +763,7 @@ export function Settings() {
       </ListItem>
       <ListItem
         title={Locale.Settings.Access.OpenAI.ApiKey.Title}
-        subTitle={Locale.Settings.Access.OpenAI.ApiKey.SubTitle}
+        subTitle={clientConfig?.byokMode ? "填写你自己的 OpenRouter API Key，调用费用由你的账号承担。" : Locale.Settings.Access.OpenAI.ApiKey.SubTitle}
       >
         <PasswordInput
           aria={Locale.Settings.ShowPassword}
@@ -1838,6 +1840,7 @@ export function Settings() {
                     <Select
                       aria-label={Locale.Settings.Access.Provider.Title}
                       value={accessStore.provider}
+                      disabled={!!clientConfig?.byokMode}
                       onChange={(e) => {
                         accessStore.update(
                           (access) =>

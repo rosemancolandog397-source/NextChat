@@ -231,6 +231,7 @@ export const useAccessStore = createPersistStore(
 
     isAuthorized() {
       this.fetch();
+      if (getClientConfig()?.byokMode) return !!get().openaiApiKey.trim();
 
       if (getClientConfig()?.serverOnlyApiKey || get().serverOnlyApiKey) {
         return !get().needCode || ensure(get(), ["accessCode"]);
@@ -263,7 +264,7 @@ export const useAccessStore = createPersistStore(
         method: "post",
         body: null,
         headers: {
-          ...getHeaders(),
+          ...(getClientConfig()?.byokMode ? { "Content-Type": "application/json" } : getHeaders()),
         },
       })
         .then((res) => res.json())

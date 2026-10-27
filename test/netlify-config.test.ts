@@ -12,10 +12,9 @@ test("Netlify uses a server build and aborts before the platform hard limit", ()
   expect(MODEL_DEADLINE_MS + 5000).toBeLessThan(60000);
 });
 
-test("the public env example contains empty credentials and only the OpenRouter base URL", () => {
+test("BYOK template does not request owner keys or Redis secrets", () => {
   const example = readFileSync(".env.example", "utf8");
-  expect(example).toMatch(/^OPENAI_API_KEY=$/m);
-  expect(example).toMatch(/^AI_BUDGET_REDIS_REST_TOKEN=$/m);
-  expect(example).toContain("BASE_URL=https://openrouter.ai/api/v1");
-  expect(example).not.toContain("/chat/completions");
+  expect(example).toMatch(/^BYOK_MODE=1$/m);
+  expect(example).not.toMatch(/^OPENAI_API_KEY=/m);
+  expect(example).not.toMatch(/^AI_BUDGET_REDIS_REST_TOKEN=/m);
 });

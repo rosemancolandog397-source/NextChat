@@ -1,7 +1,8 @@
 import webpack from "webpack";
 
 const mode = process.env.BUILD_MODE ?? "standalone";
-const publicPrivacyMode = process.env.SERVER_ONLY_API_KEY === "1" ||
+const byokMode = process.env.BYOK_MODE !== "0";
+const publicPrivacyMode = byokMode || process.env.SERVER_ONLY_API_KEY === "1" ||
   (process.env.NODE_ENV === "production" && mode !== "export" && !process.env.BUILD_APP);
 console.log("[Next] build mode", mode);
 
@@ -105,7 +106,7 @@ if (mode !== "export") {
     ];
 
     return {
-      beforeFiles: ret,
+      beforeFiles: ret.filter((rule) => !(byokMode && rule.source.startsWith("/api/proxy/"))),
     };
   };
 }

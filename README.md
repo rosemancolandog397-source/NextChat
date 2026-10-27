@@ -212,3 +212,7 @@ corepack yarn@1.22.19 tsc --noEmit --incremental false
 ## Netlify Free 部署
 
 Netlify 部署配置与秘密环境变量清单见 [Netlify 部署说明](docs/netlify-deployment.zh-CN.md)。保留服务端密钥、Redis 限额保护；模型请求最多 50 秒，长生成仍可能超时并保留原有草稿。当前不宣称已完成 Netlify 线上验收。
+
+## 当前公开部署方式：BYOK
+
+公开版本默认用户自带 OpenRouter Key，不提供站长共享额度。复用原设置页的 OpenAI 兼容接口 Key 输入框；服务端固定转发至 OpenRouter，缺少用户 Key 即拒绝。Netlify 不需要站长 API Key 或 Redis Token。详见 [BYOK 配置和安全边界](docs/byok.zh-CN.md)。此前文档中的共享密钥/Redis 预算描述属于历史实现，不能作为当前部署配置。

@@ -1,7 +1,7 @@
 import md5 from "spark-md5";
 import { DEFAULT_MODELS, DEFAULT_GA_ID } from "../constant";
 import { isGPT4Model } from "../utils/model";
-import { serverOnlyApiKeys } from "./key-policy";
+import { byokMode, serverOnlyApiKeys } from "./key-policy";
 import { allowedAiModel } from "./ai-cost-policy";
 
 declare global {
@@ -116,6 +116,7 @@ const ACCESS_CODES = (function getAccessCodes(): Set<string> {
 })();
 
 function getApiKey(keys?: string) {
+  if (byokMode()) return "";
   const apiKeyEnvVar = keys ?? "";
   const apiKeys = apiKeyEnvVar.split(",").map((v) => v.trim());
   const randomIndex = Math.floor(Math.random() * apiKeys.length);
@@ -135,7 +136,7 @@ export const getServerSideConfig = () => {
   let customModels = process.env.CUSTOM_MODELS ?? "";
   let defaultModel = process.env.DEFAULT_MODEL ?? "";
   let visionModels = process.env.VISION_MODELS ?? "";
-  if (serverOnlyApiKeys(process.env)) {
+  if (serverOnlyApiKeys(process.env) || byokMode()) {
     const model = allowedAiModel(process.env);
     customModels = model ? `-all,+${model}@OpenAI` : "-all";
     defaultModel = model ? `${model}@OpenAI` : "";
@@ -173,7 +174,7 @@ export const getServerSideConfig = () => {
   ).split(",");
 
   return {
-    baseUrl: process.env.BASE_URL,
+    baseUrl: byokMode() ? "https://openrouter.ai/api/v1" : process.env.BASE_URL,
     apiKey: getApiKey(process.env.OPENAI_API_KEY),
     openaiOrgId: process.env.OPENAI_ORG_ID,
 
@@ -247,28 +248,29 @@ export const getServerSideConfig = () => {
     ai302Url: process.env.AI302_URL,
     ai302ApiKey: getApiKey(process.env.AI302_API_KEY),
 
-    gtmId: process.env.GTM_ID,
-    gaId: process.env.GA_ID || DEFAULT_GA_ID,
+    gtmId: byokMode() ? undefined : process.env.GTM_ID,
+    gaId: byokMode() ? undefined : process.env.GA_ID || DEFAULT_GA_ID,
 
-    needCode: ACCESS_CODES.size > 0,
+    needCode: !byokMode() && ACCESS_CODES.size > 0,
     code: process.env.CODE,
     codes: ACCESS_CODES,
 
     proxyUrl: process.env.PROXY_URL,
-    isVercel: !!process.env.VERCEL,
+    isVercel: !byokMode() && !!process.env.VERCEL,
 
+    byokMode: byokMode(),
     serverOnlyApiKey: serverOnlyApiKeys(process.env),
     hideUserApiKey:
-      serverOnlyApiKeys(process.env) || !!process.env.HIDE_USER_API_KEY,
+      !byokMode() && (serverOnlyApiKeys(process.env) || !!process.env.HIDE_USER_API_KEY),
     disableGPT4,
-    hideBalanceQuery: !process.env.ENABLE_BALANCE_QUERY,
+    hideBalanceQuery: byokMode() || !process.env.ENABLE_BALANCE_QUERY,
     disableFastLink:
-      serverOnlyApiKeys(process.env) || !!process.env.DISABLE_FAST_LINK,
+      byokMode() || serverOnlyApiKeys(process.env) || !!process.env.DISABLE_FAST_LINK,
     customModels,
     defaultModel,
     visionModels,
     allowedWebDavEndpoints,
     enableMcp:
-      !serverOnlyApiKeys(process.env) && process.env.ENABLE_MCP === "true",
+      !byokMode() && !serverOnlyApiKeys(process.env) && process.env.ENABLE_MCP === "true",
   };
 };

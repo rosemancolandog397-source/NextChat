@@ -3,6 +3,7 @@
   publish = ".next"
 
 [build.environment]
+  BYOK_MODE = "1"
   NODE_VERSION = "24"
   YARN_VERSION = "1.22.19"
   YARN_FLAGS = "--frozen-lockfile --production=false"

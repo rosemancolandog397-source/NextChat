@@ -874,7 +874,7 @@ export const useChatStore = createPersistStore(
     merge(persistedState, currentState) {
       const state = { ...currentState, ...(persistedState as Partial<typeof currentState>) };
       const policy = getClientConfig();
-      if (!policy?.serverOnlyApiKey) return state;
+      if (!policy?.serverOnlyApiKey && !policy?.byokMode) return state;
       return {
         ...state,
         sessions: state.sessions.map((session) => ({

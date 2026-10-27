@@ -48,16 +48,16 @@ afterEach(() => {
 });
 
 test("production defaults to server-only and cannot opt out with 0", () => {
-  expect(serverOnlyApiKeys({ NODE_ENV: "production" })).toBe(true);
+  expect(serverOnlyApiKeys({ BYOK_MODE: "0", NODE_ENV: "production" })).toBe(true);
   expect(
-    serverOnlyApiKeys({ NODE_ENV: "production", SERVER_ONLY_API_KEY: "0" }),
+    serverOnlyApiKeys({ BYOK_MODE: "0", NODE_ENV: "production", SERVER_ONLY_API_KEY: "0" }),
   ).toBe(true);
-  expect(serverOnlyApiKeys({ NODE_ENV: "development" })).toBe(false);
+  expect(serverOnlyApiKeys({ BYOK_MODE: "0", NODE_ENV: "development" })).toBe(false);
   expect(
-    serverOnlyApiKeys({ NODE_ENV: "development", SERVER_ONLY_API_KEY: "1" }),
+    serverOnlyApiKeys({ BYOK_MODE: "0", NODE_ENV: "development", SERVER_ONLY_API_KEY: "1" }),
   ).toBe(true);
   expect(
-    serverOnlyApiKeys({ NODE_ENV: "production", BUILD_MODE: "export" }),
+    serverOnlyApiKeys({ BYOK_MODE: "0", NODE_ENV: "production", BUILD_MODE: "export" }),
   ).toBe(false);
 });
 
@@ -77,6 +77,7 @@ test.each(["GET", "POST"] as const)(
     const json = await result.json();
     expect(Object.keys(json).sort()).toEqual(
       [
+        "byokMode",
         "serverOnlyApiKey",
         "needCode",
         "hideUserApiKey",

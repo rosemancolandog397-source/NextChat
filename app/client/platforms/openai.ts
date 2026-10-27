@@ -85,6 +85,10 @@ export class ChatGPTApi implements LLMApi {
 
   path(path: string): string {
     const accessStore = useAccessStore.getState();
+    if (getClientConfig()?.byokMode) {
+      // Never send a user key to persisted custom URLs or gateway URLs.
+      return [ApiPath.OpenAI, path].join("/");
+    }
 
     let baseUrl = "";
 

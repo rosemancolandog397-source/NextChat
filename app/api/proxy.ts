@@ -11,7 +11,7 @@ export async function handle(
   }
   const serverConfig = getServerSideConfig();
   // A client-controlled destination must never receive the shared server key.
-  if (serverConfig.serverOnlyApiKey) {
+  if (serverConfig.serverOnlyApiKey || serverConfig.byokMode) {
     return NextResponse.json(
       { error: "custom proxy is disabled in server-only mode" },
       { status: 403 },

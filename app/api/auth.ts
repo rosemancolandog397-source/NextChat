@@ -4,7 +4,7 @@ import md5 from "spark-md5";
 import { ACCESS_CODE_PREFIX, ModelProvider } from "../constant";
 
 function parseApiKey(bearToken: string) {
-  const token = bearToken.trim().replaceAll("Bearer ", "").trim();
+  const token = bearToken.trim().replace(/^Bearer\s+/i, "").trim();
   const isApiKey = !token.startsWith(ACCESS_CODE_PREFIX);
 
   return {
@@ -22,6 +22,17 @@ export function auth(req: NextRequest, modelProvider: ModelProvider) {
   const hashedCode = md5.hash(accessCode ?? "").trim();
 
   const serverConfig = getServerSideConfig();
+  if (serverConfig.byokMode) {
+    if (modelProvider !== ModelProvider.GPT ||
+        !["/api/openai/v1/chat/completions", "/api/openai/v1/models"].includes(req.nextUrl.pathname)) {
+      return { error: true, msg: "BYOK 模式只支持 OpenRouter 文本聊天。" };
+    }
+    if (!/^Bearer [^\s]+$/i.test(authToken) || !apiKey ||
+        req.headers.get("api-key") || req.headers.get("x-api-key") || req.headers.get("x-goog-api-key")) {
+      return { error: true, msg: "请在设置中填写你自己的 OpenRouter API Key；本站不提供共享 Key。" };
+    }
+    return { error: false };
+  }
   if (
     serverConfig.serverOnlyApiKey &&
     (modelProvider !== ModelProvider.GPT ||

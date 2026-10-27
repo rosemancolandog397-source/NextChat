@@ -15,6 +15,7 @@ export function workbenchResourcePath(base: string, resource: string): string {
 
 class WorkbenchOpenAI extends ChatGPTApi {
   path(resource: string): string {
+    if (getClientConfig()?.byokMode) return super.path(resource);
     const { useCustomConfig, openaiUrl, serverOnlyApiKey } =
       useAccessStore.getState();
     return super.path(

@@ -138,6 +138,10 @@ export class ClientApi {
   public llm: LLMApi;
 
   constructor(provider: ModelProvider = ModelProvider.GPT) {
+    if (getClientConfig()?.byokMode) {
+      this.llm = new ChatGPTApi();
+      return;
+    }
     switch (provider) {
       case ModelProvider.GeminiPro:
         this.llm = new GeminiProApi();
@@ -254,6 +258,11 @@ export function getHeaders(ignoreHeaders: boolean = false) {
 
   const clientConfig = getClientConfig();
 
+  if (clientConfig?.byokMode) {
+    const key = accessStore.openaiApiKey?.trim();
+    if (key) headers.Authorization = `Bearer ${key}`;
+    return headers;
+  }
   if (clientConfig?.serverOnlyApiKey || accessStore.serverOnlyApiKey) {
     if (validString(accessStore.accessCode)) {
       headers["Authorization"] = getBearerToken(

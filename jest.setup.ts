@@ -20,3 +20,6 @@ global.fetch = jest.fn(() =>
     text: () => Promise.resolve(""),
   } as Response),
 );
+
+// Legacy/shared-mode regression suites opt in explicitly; BYOK suites override it.
+process.env.BYOK_MODE = "0";

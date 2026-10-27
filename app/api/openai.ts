@@ -56,7 +56,7 @@ export async function handle(
     });
   }
 
-  if (getServerSideConfig().serverOnlyApiKey) {
+  if (getServerSideConfig().serverOnlyApiKey || getServerSideConfig().byokMode) {
     if (subpath === OpenaiPath.ListModelPath && req.method === "GET") {
       const model = allowedAiModel(process.env);
       return NextResponse.json({

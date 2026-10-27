@@ -57,3 +57,12 @@ test("private development and desktop choices are unchanged", () => {
   expect(normalizeModelSelection(old, { serverOnlyApiKey: false })).toBe(old);
   expect(publicModelAccessConfig({})).toEqual({});
 });
+
+test("BYOK restores the key field while correcting obsolete server-only state", () => {
+  const byok = { ...policy, serverOnlyApiKey: false, byokMode: true };
+  expect(publicModelAccessConfig(byok)).toMatchObject({
+    byokMode: true, serverOnlyApiKey: false, hideUserApiKey: false,
+    provider: "OpenAI", useCustomConfig: true, needCode: false,
+  });
+  expect(normalizeModelSelection(old, byok).model).toBe(policy.publicDefaultModel);
+});

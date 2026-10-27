@@ -1,3 +1,4 @@
+import { byokMode } from "./config/key-policy";
 import { Analytics } from "@vercel/analytics/react";
 import { Home } from "./components/home";
 import { getServerSideConfig } from "./config/server";
@@ -10,7 +11,7 @@ export default async function App() {
       <Home />
       {serverConfig?.isVercel && (
         <>
-          <Analytics />
+          {!byokMode() && <Analytics />}
         </>
       )}
     </>

@@ -246,7 +246,7 @@ function sanitizePayload(body: any, policy: AiCostPolicy) {
   return JSON.stringify(payload);
 }
 
-export async function prepareAiRequest(req: NextRequest) {
+export async function prepareAiRequest(req: NextRequest, useSharedQuota = true) {
   let policy: AiCostPolicy;
   try {
     policy = getAiCostPolicy(process.env);
@@ -261,6 +261,6 @@ export async function prepareAiRequest(req: NextRequest) {
     throw new AiCostError("AI_REQUEST_INVALID", 400);
   }
   const payload = sanitizePayload(body, policy);
-  await reserveAiQuota(policy);
+  if (useSharedQuota) await reserveAiQuota(policy);
   return payload;
 }

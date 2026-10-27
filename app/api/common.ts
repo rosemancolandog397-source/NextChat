@@ -6,13 +6,20 @@ import { getModelProvider, isModelNotavailableInServer } from "../utils/model";
 import { openAIResourcePath } from "../client/openai-path";
 import { AiCostError, aiCostResponse, prepareAiRequest } from "./ai-cost-guard";
 import { credentialSafeResponse } from "./credential-response";
+import { auth } from "./auth";
+import { ModelProvider } from "../constant";
 import { fetchModelResponse, ModelDeadlineError } from "./model-deadline";
 
 const serverConfig = getServerSideConfig();
 
 export async function requestOpenai(req: NextRequest) {
+  // Defense in depth: even direct calls must never inject or use a server key.
+  if (serverConfig.byokMode) {
+    const result = auth(req, ModelProvider.GPT);
+    if (result.error) return NextResponse.json(result, { status: 401 });
+  }
   let protectedBody: string | undefined;
-  if (serverConfig.serverOnlyApiKey) {
+  if (serverConfig.serverOnlyApiKey || serverConfig.byokMode) {
     if (
       req.method !== "POST" ||
       req.nextUrl.pathname !== "/api/openai/v1/chat/completions"
@@ -20,7 +27,7 @@ export async function requestOpenai(req: NextRequest) {
       return aiCostResponse(new AiCostError("AI_ENDPOINT_DENIED", 403));
     }
     try {
-      protectedBody = await prepareAiRequest(req);
+      protectedBody = await prepareAiRequest(req, !serverConfig.byokMode);
     } catch (error) {
       return aiCostResponse(
         error instanceof AiCostError
@@ -106,9 +113,8 @@ export async function requestOpenai(req: NextRequest) {
     }
   }
 
-  const fetchUrl = cloudflareAIGatewayUrl(
-    `${baseUrl}/${isAzure ? path : openAIResourcePath(baseUrl, path)}`,
-  );
+  const resourceUrl = `${baseUrl}/${isAzure ? path : openAIResourcePath(baseUrl, path)}`;
+  const fetchUrl = serverConfig.byokMode ? resourceUrl : cloudflareAIGatewayUrl(resourceUrl);
 
   const fetchOptions: RequestInit = {
     headers: {
@@ -162,13 +168,13 @@ export async function requestOpenai(req: NextRequest) {
   }
 
   try {
-    const res = serverConfig.serverOnlyApiKey
+    const res = (serverConfig.serverOnlyApiKey || serverConfig.byokMode)
       ? await fetchModelResponse(
           fetchUrl, { ...fetchOptions, signal: req.signal },
           JSON.parse(protectedBody!).stream !== true,
         )
       : await fetch(fetchUrl, fetchOptions);
-    if (serverConfig.serverOnlyApiKey) {
+    if (serverConfig.serverOnlyApiKey || serverConfig.byokMode) {
       return credentialSafeResponse(res, [
         authValue.replace(/^Bearer\s+/i, ""), serverConfig.apiKey,
       ]);
