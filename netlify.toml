@@ -1,0 +1,19 @@
+[build]
+  command = "corepack yarn build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "24"
+  YARN_VERSION = "1.22.19"
+  YARN_FLAGS = "--frozen-lockfile --production=false"
+  HUSKY = "0"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Netlify automatically installs its maintained Next.js/OpenNext adapter.
+# Secrets belong in the UI/API with BOTH Builds and Functions scopes, never here.
+# Preview contexts do not build or receive the shared production credentials.
+[context.deploy-preview]
+  ignore = "exit 0"
+
+[context.branch-deploy]
+  ignore = "exit 0"

@@ -95,3 +95,11 @@ Thumbs.db
 # secret key
 *.key
 *.key.pub
+
+# Never send local secrets or VCS data into a build context
+.env*
+!.env.template
+!.env.example
+.git
+.netlify
+.vercel

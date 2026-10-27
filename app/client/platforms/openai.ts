@@ -118,7 +118,7 @@ export class ChatGPTApi implements LLMApi {
       baseUrl = "https://" + baseUrl;
     }
 
-    console.log("[Proxy Endpoint] ", baseUrl, path);
+
 
     // try rebuild url, when using cloudflare ai gateway in client
     return cloudflareAIGatewayUrl(
@@ -270,7 +270,7 @@ export class ChatGPTApi implements LLMApi {
       }
     }
 
-    console.log("[Request] openai payload: ", requestPayload);
+
 
     const shouldStream = !isDalle3 && !!options.config.stream;
     const controller = new AbortController();
@@ -429,7 +429,7 @@ export class ChatGPTApi implements LLMApi {
         options.onFinish(message, res);
       }
     } catch (e) {
-      console.log("[Request] failed to make a chat request", e);
+
       options.onError?.(e as Error);
     }
   }

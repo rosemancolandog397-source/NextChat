@@ -228,3 +228,29 @@ test("legacy model selection is normalized before a protected request", async ()
   expect(response.status).toBe(200);
   expect(forwarded).toBe(1);
 });
+
+test("a slow non-streaming generation returns a safe 504 without retrying or leaking credentials", async () => {
+  jest.useFakeTimers();
+  let modelSignal: AbortSignal | undefined;
+  jest.mocked(fetch).mockImplementation(async (url, options) => {
+    if (String(url).includes("quota-fixture.upstash.io")) {
+      return new Response(JSON.stringify({ result: [1, 0, 0] }));
+    }
+    modelSignal = options?.signal as AbortSignal;
+    return new Response(new ReadableStream({ start() {} }));
+  });
+  try {
+    const pending = call();
+    await jest.advanceTimersByTimeAsync(50001);
+    const response = await pending;
+    expect(response.status).toBe(504);
+    expect(response.headers.get("X-AI-Error-Code")).toBe("AI_UPSTREAM_TIMEOUT");
+    const body = await response.text();
+    expect(body).not.toContain("fixture-server-key");
+    expect(body).not.toContain("fixture-quota-token");
+    expect(modelSignal?.aborted).toBe(true);
+    expect(fetch).toHaveBeenCalledTimes(2); // One quota reservation and one model attempt.
+  } finally {
+    jest.useRealTimers();
+  }
+});

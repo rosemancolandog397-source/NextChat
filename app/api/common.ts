@@ -6,6 +6,7 @@ import { getModelProvider, isModelNotavailableInServer } from "../utils/model";
 import { openAIResourcePath } from "../client/openai-path";
 import { AiCostError, aiCostResponse, prepareAiRequest } from "./ai-cost-guard";
 import { credentialSafeResponse } from "./credential-response";
+import { fetchModelResponse, ModelDeadlineError } from "./model-deadline";
 
 const serverConfig = getServerSideConfig();
 
@@ -161,7 +162,12 @@ export async function requestOpenai(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(fetchUrl, fetchOptions);
+    const res = serverConfig.serverOnlyApiKey
+      ? await fetchModelResponse(
+          fetchUrl, { ...fetchOptions, signal: req.signal },
+          JSON.parse(protectedBody!).stream !== true,
+        )
+      : await fetch(fetchUrl, fetchOptions);
     if (serverConfig.serverOnlyApiKey) {
       return credentialSafeResponse(res, [
         authValue.replace(/^Bearer\s+/i, ""), serverConfig.apiKey,
@@ -199,6 +205,11 @@ export async function requestOpenai(req: NextRequest) {
       statusText: res.statusText,
       headers: newHeaders,
     });
+  } catch (error) {
+    if (error instanceof ModelDeadlineError) {
+      return aiCostResponse(new AiCostError("AI_UPSTREAM_TIMEOUT", 504));
+    }
+    throw error;
   } finally {
     clearTimeout(timeoutId);
   }

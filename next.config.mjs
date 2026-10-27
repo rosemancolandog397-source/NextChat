@@ -28,7 +28,7 @@ const nextConfig = {
 
     return config;
   },
-  output: mode,
+  output: process.env.NETLIFY === "true" && mode === "standalone" ? undefined : mode,
   images: {
     unoptimized: mode === "export",
   },

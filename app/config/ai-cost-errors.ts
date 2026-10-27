@@ -6,6 +6,7 @@ export const AI_COST_ERRORS = {
   AI_REQUEST_INVALID: "请求格式不受支持；本站费用保护模式仅支持单份文本回复。",
   AI_BUDGET_UNAVAILABLE:
     "费用保护服务未配置或暂时不可用，已暂停 AI 调用，请联系管理员。",
+  AI_UPSTREAM_TIMEOUT: "模型响应超时，请缩短输入或稍后重试；已有草稿已保留。",
   AI_ENDPOINT_DENIED: "本站费用保护模式只开放指定 DeepSeek 的文本聊天接口。",
 } as const;
 

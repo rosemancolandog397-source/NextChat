@@ -53,6 +53,7 @@ app/mcp/mcp_config.json
 # Local secrets (keep only the distributable template)
 .env.*
 !.env.template
+!.env.example
 .envrc
 .npmrc
 .netrc
@@ -71,3 +72,6 @@ secrets*.json
 *.orig
 *.zip
 /backups/
+
+# Netlify local project metadata and generated functions
+.netlify/

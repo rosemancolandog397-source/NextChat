@@ -208,3 +208,7 @@ corepack yarn@1.22.19 tsc --noEmit --incremental false
 当前以个人非商业演示为目标，部署说明见 [Vercel Hobby 配置清单](docs/vercel-hobby-deployment.zh-CN.md)。模型调用保留 OpenRouter 与 Upstash Redis 限额保护，密钥仅通过平台环境变量配置。
 
 已关闭 Git 自动部署；提交代码不会自动授权正式上线。尚未完成 Vercel 线上构建和真实 Redis / 模型服务的上线验收。
+
+## Netlify Free 部署
+
+Netlify 部署配置与秘密环境变量清单见 [Netlify 部署说明](docs/netlify-deployment.zh-CN.md)。保留服务端密钥、Redis 限额保护；模型请求最多 50 秒，长生成仍可能超时并保留原有草稿。当前不宣称已完成 Netlify 线上验收。
